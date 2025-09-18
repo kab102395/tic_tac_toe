@@ -1,0 +1,34 @@
+script: "/ttt/ttt.gui_script"
+fonts {
+  name: "system_font"
+  font: "/builtins/fonts/default.font"
+}
+nodes {
+  position {
+    x: 640.0
+    y: 680.0
+  }
+  size {
+    x: 500.0
+    y: 50.0
+  }
+  type: TYPE_TEXT
+  text: "TTT Multiplayer"
+  font: "system_font"
+  id: "title"
+}
+nodes {
+  position {
+    x: 640.0
+    y: 40.0
+  }
+  size {
+    x: 1200.0
+    y: 40.0
+  }
+  type: TYPE_TEXT
+  text: "status"
+  font: "system_font"
+  id: "status"
+}
+material: "/builtins/materials/gui.material"

@@ -1,0 +1,66 @@
+# Java/Gradle build artifacts
+java-server/build/
+java-server/.gradle/
+java-server/bin/
+java-server/database/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Defold build artifacts
+defold-client/build/
+*.luac
+*.projectc
+*.collectionc
+*.gui_scriptc
+*.guic
+*.fontc
+*.materialc
+*.texture_profilesc
+*.gamepadsc
+*.display_profilesc
+*.render_scriptc
+*.renderc
+*.input_bindingc
+*_generated_*.spc
+*_generated_*.goc
+*_generated_*.glyph_bankc
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+log.txt
+
+# Test files
+test_*.ps1
+test_*.html
+*.html
+
+# Temporary files
+*.tmp
+*.temp
+*~

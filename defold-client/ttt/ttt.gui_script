@@ -1,0 +1,1003 @@
+local net  = require "net.client"
+
+local BOARD_ORIGIN = vmath.vector3(440, 160, 0) -- bottom-left
+local CELL = 120
+
+-- Random name generator
+local function generate_random_name()
+    -- Re-seed with more entropy each time to avoid duplicate names
+    -- Use current time in milliseconds plus some randomness
+    local current_time = os.time()
+    local extra_entropy = 0
+    
+    -- Add some pseudo-random entropy based on current time
+    for i = 1, 5 do
+        extra_entropy = extra_entropy + (current_time * i * 7 + i * 13) % 10000
+    end
+    
+    local seed = current_time * 1000 + extra_entropy + math.random(1, 50000)
+    math.randomseed(seed)
+    
+    local adjectives = {"Swift", "Clever", "Bold", "Quick", "Smart", "Brave", "Cool", "Sharp", "Epic", "Pro", "Elite", "Super", "Mega", "Ultra", "Alpha", "Prime", "Frost", "Fire", "Storm", "Thunder", "Shadow", "Light", "Dark", "Golden", "Silver", "Crimson", "Azure", "Emerald", "Ruby", "Diamond"}
+    local nouns = {"Gamer", "Player", "Hero", "Champion", "Master", "Ace", "Ninja", "Tiger", "Eagle", "Wolf", "Phoenix", "Dragon", "Knight", "Warrior", "Legend", "Hunter", "Scout", "Ranger", "Paladin", "Wizard", "Rogue", "Archer", "Mage", "Berserker", "Guardian", "Striker", "Defender", "Assassin", "Gladiator"}
+    
+    local adj = adjectives[math.random(#adjectives)]
+    local noun = nouns[math.random(#nouns)]
+    local number = math.random(10, 9999)  -- Larger number range
+    
+    return adj .. noun .. number
+end
+
+local function cell_at(x, y)
+    local cx = math.floor((x - BOARD_ORIGIN.x) / CELL)
+    local cy = math.floor((y - BOARD_ORIGIN.y) / CELL)  -- <- fixed
+    if cx < 0 or cx > 2 or cy < 0 or cy > 2 then return nil end
+    return (2 - cy) * 3 + cx
+end
+
+local function clear_nodes(list)
+    if not list then return end
+    for _,n in ipairs(list) do
+        if n then
+            pcall(gui.delete_node, n)  -- Safe delete - won't crash if node is invalid
+        end
+    end
+end
+
+local function draw_grid(self)
+    clear_nodes(self.grid)
+    self.grid = {}
+    local color = vmath.vector4(1,1,1,1)
+    -- verticals
+    for i=0,3 do
+        local x = BOARD_ORIGIN.x + i*CELL
+        local node = gui.new_box_node(vmath.vector3(x, BOARD_ORIGIN.y + 1.5*CELL, 0), vmath.vector3(2, CELL*3, 0))
+        gui.set_color(node, color); table.insert(self.grid, node)
+    end
+    -- horizontals
+    for j=0,3 do
+        local y = BOARD_ORIGIN.y + j*CELL
+        local node = gui.new_box_node(vmath.vector3(BOARD_ORIGIN.x + 1.5*CELL, y, 0), vmath.vector3(CELL*3, 2, 0))
+        gui.set_color(node, color); table.insert(self.grid, node)
+    end
+end
+
+local function draw_board(self)
+    print("*** DRAW_BOARD CALLED ***")
+    print("Board to draw:", self.board)
+    clear_nodes(self.marks)
+    self.marks = {}
+    
+    if not self.board then
+        print("No board to draw!")
+        return
+    end
+    
+    for i=0,8 do
+        local ch = string.sub(self.board, i+1, i+1)
+        print("Cell", i, "contains:", ch)
+        if ch ~= "." then
+            local cx = i % 3; local cy = math.floor(i / 3)
+            local p = vmath.vector3(BOARD_ORIGIN.x + cx*CELL + CELL/2, BOARD_ORIGIN.y + (2-cy)*CELL + CELL/2, 0)
+            local n = gui.new_text_node(p, ch)
+            gui.set_font(n, hash("system_font"))
+            gui.set_scale(n, vmath.vector3(2,2,1))
+            table.insert(self.marks, n)
+            print("Created mark", ch, "at position", cx, cy)
+        end
+    end
+    print("Total marks created:", #self.marks)
+end
+
+-- Helper function to update board visual from WebSocket messages
+function update_board_visual(self)
+    draw_board(self)
+    print("Board updated visually:", self.board)
+end
+
+-- NEW: Show lobby with create/join options
+function show_lobby(self)
+    gui.set_text(gui.get_node("status"), "🏪 LOBBY - Loading matches...")
+    print("Showing lobby for player:", self.player_name)
+    
+    -- Load available matches
+    net.get_available_matches(function(success, matches_json)
+        if success then
+            print("Available matches response:", matches_json)
+            -- Simple JSON parsing for match count
+            local match_count = 0
+            if matches_json and string.find(matches_json, '"totalMatches":') then
+                local count_start = string.find(matches_json, '"totalMatches":')
+                local count_end = string.find(matches_json, '[,}]', count_start + 15)
+                if count_start and count_end then
+                    local count_str = string.sub(matches_json, count_start + 15, count_end - 1)
+                    match_count = tonumber(count_str) or 0
+                end
+            end
+            
+            self.available_matches = matches_json
+            local status = "🏪 LOBBY - " .. self.player_name .. "\n\n"
+            status = status .. "PRESS KEYS:\n"
+            status = status .. "📝 [C] Create New Match\n"
+            status = status .. "🎮 [J] Join Match (" .. match_count .. " available)\n"
+            status = status .. "� [S] View Statistics\n"
+            status = status .. "�🔄 [R] Refresh Matches\n\n"
+            status = status .. "Ready for keyboard input!"
+            gui.set_text(gui.get_node("status"), status)
+        else
+            local status = "🏪 LOBBY - " .. self.player_name .. "\n\n"
+            status = status .. "PRESS KEYS:\n"
+            status = status .. "📝 [C] Create New Match\n"
+            status = status .. "📊 [S] View Statistics\n"
+            status = status .. "❌ Error loading matches - [R] to retry\n\n"
+            status = status .. "Ready for keyboard input!"
+            gui.set_text(gui.get_node("status"), status)
+        end
+    end)
+end
+
+-- NEW: Show available matches to join
+function show_join_matches(self)
+    gui.set_text(gui.get_node("status"), "🔍 Loading matches...")
+    
+    net.get_available_matches(function(success, matches_json)
+        if success and matches_json then
+            print("Matches JSON:", matches_json)
+            
+            -- Simple parsing to extract match info
+            local matches = {}
+            local match_pattern = '"matchId":"([^"]*)"[^}]*"hostName":"([^"]*)"'
+            local pos = 1
+            while true do
+                local match_id, host_name = string.match(matches_json, match_pattern, pos)
+                if not match_id then break end
+                
+                table.insert(matches, {id = match_id, host = host_name})
+                pos = string.find(matches_json, match_pattern, pos) + 1
+            end
+            
+            if #matches == 0 then
+                gui.set_text(gui.get_node("status"), "📭 No matches available\n[B] Back to lobby\n[C] Create match")
+            else
+                local status = "🎮 Available Matches:\n"
+                for i, match in ipairs(matches) do
+                    local short_id = string.sub(match.id, 1, 8) .. "..."
+                    status = status .. "[" .. i .. "] " .. match.host .. " (" .. short_id .. ")\n"
+                end
+                status = status .. "[B] Back to lobby"
+                gui.set_text(gui.get_node("status"), status)
+                self.displayed_matches = matches
+            end
+        else
+            gui.set_text(gui.get_node("status"), "❌ Failed to load matches\n[B] Back to lobby\n[R] Retry")
+        end
+    end)
+end
+
+-- NEW: Handle name input
+function handle_name_input(self, action_id, action)
+    print("Name input handler - action:", action_id, "released:", action.released)
+    print("Action ID hash value:", tostring(action_id))
+    print("ESC hash value:", tostring(hash("key_esc")))
+    
+    if action_id == hash("key_enter") and action.released then
+        print("ENTER pressed - confirming name")
+        -- Confirm name and proceed
+        if string.len(self.typing_name) > 0 then
+            self.player_name = self.typing_name
+        else
+            self.player_name = generate_random_name()  -- Use better random name
+        end
+        
+        print("Using player name:", self.player_name)
+        gui.set_text(gui.get_node("status"), "🔗 Connecting to server as " .. self.player_name .. "...")
+        net.connect("ws://127.0.0.1:8080")
+        self.game_state = "connecting"
+        
+    elseif action_id == hash("key_esc") and action.released then
+        -- Use random name
+        print("ESC pressed - generating random name")
+        self.player_name = generate_random_name()  -- Use better random name
+        print("Generated random name:", self.player_name)
+        gui.set_text(gui.get_node("status"), "🔗 Connecting to server as " .. self.player_name .. "...")
+        net.connect("ws://127.0.0.1:8080")
+        self.game_state = "connecting"
+        
+    elseif (action_id == hash("escape") or action_id == hash("key_escape") or action_id == hash("esc")) and action.released then
+        -- Alternative ESC key handling
+        print("Alternative ESC pressed - generating random name")
+        self.player_name = generate_random_name()  -- Use better random name
+        print("Generated random name:", self.player_name)
+        gui.set_text(gui.get_node("status"), "🔗 Connecting to server as " .. self.player_name .. "...")
+        net.connect("ws://127.0.0.1:8080")
+        self.game_state = "connecting"
+        
+    elseif action_id == hash("key_space") then
+        -- Space bar alternative for random name generation
+        print("SPACE KEY EVENT - released:", action.released, "pressed:", action.pressed)
+        if action.released then
+            print("SPACE RELEASED - generating random name (alternative to ESC)")
+            self.player_name = generate_random_name()  -- Use better random name
+            print("Generated random name:", self.player_name)
+            gui.set_text(gui.get_node("status"), "🔗 Connecting to server as " .. self.player_name .. "...")
+            net.connect("ws://127.0.0.1:8080")
+            self.game_state = "connecting"
+        else
+            print("SPACE PRESSED (not released yet) - waiting for release")
+        end
+        
+    elseif action_id == hash("key_backspace") and action.released then
+        -- Delete last character
+        print("BACKSPACE pressed")
+        if string.len(self.typing_name) > 0 then
+            self.typing_name = string.sub(self.typing_name, 1, -2)
+            update_name_display(self)
+        end
+        
+    elseif action_id == hash("text") then
+        -- Add typed characters (exclude spaces to avoid conflict with SPACE key)
+        if action.text and string.len(action.text) > 0 and string.len(self.typing_name) < 20 then
+            -- Only allow letters, numbers, and basic characters (but not spaces)
+            local char = action.text
+            if string.match(char, "[%w_-]") and char ~= " " then
+                print("Adding character:", char)
+                self.typing_name = self.typing_name .. char
+                update_name_display(self)
+            end
+        end
+    else
+        -- Debug: Show all unhandled input actions
+        if action.released then
+            print("*** UNHANDLED ACTION:", tostring(action_id), "Released:", action.released)
+        end
+    end
+end
+
+-- Update name input display
+function update_name_display(self)
+    local display_name = self.typing_name
+    if string.len(display_name) == 0 then
+        display_name = "_"
+    else
+        display_name = display_name .. "_"  -- Show cursor
+    end
+    
+    local status = "🎮 TIC-TAC-TOE MULTIPLAYER\n\n"
+    status = status .. "👤 Enter your name:\n"
+    status = status .. "➤ " .. display_name .. "\n\n"
+    status = status .. "💡 CONTROLS:\n"
+    status = status .. "[TYPE] Enter name\n"
+    status = status .. "[ENTER] Confirm name\n"
+    status = status .. "[BACKSPACE] Delete\n"
+    status = status .. "[ESC] Random name\n"
+    status = status .. "[SPACE] Random name (if ESC doesn't work)\n\n"
+    status = status .. "Examples: Alice, GameMaster, ProPlayer123"
+    
+    gui.set_text(gui.get_node("status"), status)
+end
+
+-- NEW: Show player statistics
+function show_player_stats(self)
+    gui.set_text(gui.get_node("status"), "📊 Loading statistics for " .. self.player_name .. "...")
+    
+    net.get_player_stats(self.player_name, function(success, stats)
+        if success and stats then
+            print("Stats received:", stats.success, stats.found)
+            
+            local status = "📊 PLAYER STATISTICS\n\n"
+            status = status .. "👤 Player: " .. self.player_name .. "\n\n"
+            
+            if stats.found then
+                -- Player has game history
+                status = status .. "🎯 GAME RECORD:\n"
+                status = status .. "🎮 Total Games: " .. (stats.totalGames or 0) .. "\n"
+                status = status .. "🏆 Wins: " .. (stats.wins or 0) .. "\n"
+                status = status .. "❌ Losses: " .. (stats.losses or 0) .. "\n"
+                status = status .. "🤝 Draws: " .. (stats.draws or 0) .. "\n\n"
+                
+                local win_rate = stats.winRate or 0.0
+                local win_percentage = math.floor(win_rate * 100 + 0.5)
+                status = status .. "📈 Win Rate: " .. win_percentage .. "%\n\n"
+                
+                if stats.totalGames > 0 then
+                    if win_percentage >= 70 then
+                        status = status .. "🌟 Rank: Champion!\n"
+                    elseif win_percentage >= 50 then
+                        status = status .. "⭐ Rank: Skilled Player\n"
+                    elseif win_percentage >= 30 then
+                        status = status .. "📚 Rank: Learning\n"
+                    else
+                        status = status .. "🔰 Rank: Beginner\n"
+                    end
+                end
+            else
+                -- No game history yet
+                status = status .. "🎯 GAME RECORD:\n"
+                status = status .. "🎮 Total Games: 0\n"
+                status = status .. "💡 No games played yet!\n\n"
+                status = status .. "🚀 Play your first game to start\n"
+                status = status .. "    building your statistics!\n"
+            end
+            
+            status = status .. "\n🎯 CONTROLS:\n"
+            status = status .. "[B] Back to Lobby\n"
+            status = status .. "[R] Refresh Stats"
+            
+            gui.set_text(gui.get_node("status"), status)
+        else
+            gui.set_text(gui.get_node("status"), "❌ Failed to load statistics\n\n[B] Back to Lobby\n[R] Retry")
+        end
+    end)
+end
+
+-- NEW: Handle lobby input
+function handle_lobby_input(self, action_id, action)
+    print("Lobby input detected:", action_id, action.released)
+    
+    if action_id == hash("key_c") and action.released then
+        -- Create match
+        print("Creating match...")
+        self.game_state = "creating"
+        gui.set_text(gui.get_node("status"), "📝 Creating match...")
+        
+        net.create_match(self.player_name, self.player_name .. "'s Game", function(success, match_id, session_id)
+            if success then
+                self.match_id = match_id
+                self.session_id = session_id
+                self.game_state = "playing"
+                self.my_mark = "X"  -- Host is always X
+                self.my_turn = true
+                self.result = "ongoing"
+                
+                gui.set_text(gui.get_node("status"), "🎮 Match created! You are X - waiting for opponent...")
+                
+                -- Start polling for game state instead of WebSocket registration
+                if session_id then
+                    print("Starting game state polling for match:", session_id)
+                    -- Start immediate poll and then periodic polling
+                    poll_game_state_once(self)
+                    start_polling_timer(self)
+                end
+            else
+                gui.set_text(gui.get_node("status"), "❌ Failed to create match\n[B] Back to lobby")
+            end
+        end)
+        
+    elseif action_id == hash("key_j") and action.released then
+        -- Show join matches
+        print("Showing join matches...")
+        self.game_state = "joining"
+        show_join_matches(self)
+        
+    elseif action_id == hash("key_r") and action.released then
+        -- Refresh lobby
+        print("Refreshing lobby...")
+        show_lobby(self)
+        
+    elseif action_id == hash("key_s") and action.released then
+        -- Show player statistics
+        print("Showing player statistics...")
+        self.game_state = "viewing_stats"
+        show_player_stats(self)
+    end
+end
+
+-- NEW: Handle joining input
+function handle_joining_input(self, action_id, action)
+    if action_id == hash("key_b") and action.released then
+        -- Back to lobby
+        self.game_state = "lobby"
+        show_lobby(self)
+        
+    elseif action_id == hash("key_r") and action.released then
+        -- Refresh matches
+        show_join_matches(self)
+        
+    elseif action_id == hash("key_c") and action.released then
+        -- Quick create from join screen
+        self.game_state = "lobby"
+        handle_lobby_input(self, hash("key_c"), action)
+    end
+    
+    -- Check for number keys to join specific matches
+    if self.displayed_matches then
+        for i = 1, #self.displayed_matches do
+            local key_name = "key_" .. tostring(i)
+            if action_id == hash(key_name) and action.released then
+                local match = self.displayed_matches[i]
+                gui.set_text(gui.get_node("status"), "🔗 Joining match by " .. match.host .. "...")
+                
+                net.join_specific_match(self.player_name, match.id, function(success, match_id, session_id)
+                    if success then
+                        self.match_id = match_id
+                        self.session_id = session_id
+                        self.game_state = "playing"
+                        self.my_mark = "O"  -- Joiner is always O
+                        self.my_turn = false
+                        self.result = "ongoing"
+                        
+                        gui.set_text(gui.get_node("status"), "🎮 Joined match! You are O - waiting for X...")
+                        
+                        -- Start polling for game state instead of WebSocket registration
+                        if session_id then
+                            print("Starting game state polling for joined match:", session_id)
+                            -- Start immediate poll and then periodic polling
+                            poll_game_state_once(self)
+                            start_polling_timer(self)
+                        end
+                    else
+                        gui.set_text(gui.get_node("status"), "❌ Failed to join match\n[B] Back to lobby")
+                    end
+                end)
+                break
+            end
+        end
+    end
+end
+
+-- NEW: Handle game ended input
+function handle_game_ended_input(self, action_id, action)
+    if action_id == hash("key_r") and action.released then
+        -- Play again - create new match
+        print("*** REMATCH REQUESTED ***")
+        gui.set_text(gui.get_node("status"), "🔄 Creating new match...")
+        
+        -- Reset game state
+        self.match_id = nil
+        self.session_id = nil
+        self.board = nil
+        self.my_turn = false
+        self.my_mark = nil
+        self.result = "ongoing"
+        self.game_result = nil
+        
+        -- Start creating new match
+        self.game_state = "creating"
+        net.create_match(self.player_name, function(success, match_id, session_id)
+            if success then
+                self.match_id = match_id
+                self.session_id = session_id
+                self.game_state = "playing"
+                self.my_mark = "X"
+                self.my_turn = false
+                self.result = "ongoing"
+                
+                gui.set_text(gui.get_node("status"), "🎮 New match created! You are X - waiting for opponent...")
+                
+                if session_id then
+                    print("Starting game state polling for new match:", session_id)
+                    poll_game_state_once(self)
+                    start_polling_timer(self)
+                end
+            else
+                gui.set_text(gui.get_node("status"), "❌ Failed to create new match\n[L] Back to lobby")
+                self.game_state = "lobby"
+            end
+        end)
+        
+    elseif action_id == hash("key_l") and action.released then
+        -- Back to lobby
+        print("*** RETURNING TO LOBBY FROM GAME END ***")
+        
+        -- Reset game state
+        self.match_id = nil
+        self.session_id = nil
+        self.board = nil
+        self.my_turn = false
+        self.my_mark = nil
+        self.result = "ongoing"
+        self.game_result = nil
+        
+        self.game_state = "lobby"
+        show_lobby(self)
+        
+    elseif action_id == hash("key_q") and action.released then
+        -- Quit game
+        print("*** QUITTING GAME ***")
+        msg.post("@system:", "exit", {code = 0})
+    end
+end
+
+-- NEW: Handle stats viewing input
+function handle_stats_input(self, action_id, action)
+    if action_id == hash("key_b") and action.released then
+        -- Back to lobby
+        print("Returning to lobby from stats")
+        self.game_state = "lobby"
+        show_lobby(self)
+        
+    elseif action_id == hash("key_r") and action.released then
+        -- Refresh stats
+        print("Refreshing player statistics")
+        show_player_stats(self)
+    end
+end
+
+function init(self)
+    msg.post(".", "acquire_input_focus")
+    self.board = "........."
+    self.result = "ongoing"
+    self.my_mark = "?"
+    self.my_turn = false
+    self.match = nil
+    self.match_id = nil  -- HTTP match ID
+    self.session_id = nil  -- HTTP session ID
+    self.marks = {}
+    self.grid = {}
+    self.connected = false
+    self.game_state = "name_input"  -- NEW: Start with name input
+    self.available_matches = {}  -- List of matches to join
+    self.player_name = ""  -- Will be set by user input
+    self.typing_name = ""  -- Buffer for name being typed
+    self.polling_timer = nil  -- Timer for game state polling
+    self.opponent_name = ""  -- Store opponent's name for display
+    
+    -- Seed random number generator with current time for truly random names
+    math.randomseed(os.time())
+    
+    draw_grid(self)
+
+    update_name_display(self)  -- Use proper display function
+end
+
+function update(self, dt)
+    -- check if we just connected
+    if not self.connected and net.connected() and self.game_state == "connecting" then
+        self.connected = true
+        self.connect_time = 0  -- track time since connection
+        gui.set_text(gui.get_node("status"), "✅ Connected as " .. self.player_name .. "! Setting up lobby...")
+    end
+    
+    -- wait a bit before showing lobby
+    if self.connected and self.connect_time ~= nil then
+        self.connect_time = self.connect_time + dt
+        if self.connect_time > 1.0 then  -- wait 1 second
+            self.game_state = "lobby"
+            show_lobby(self)
+            self.connect_time = nil  -- don't run again
+        end
+    end
+    
+    for msg in net.poll() do
+        print("=== WEBSOCKET MESSAGE RECEIVED ===")
+        print("Message type:", msg.t)
+        print("Full message:", msg)
+        print("Raw data:", msg.raw or "no raw data")
+        
+        if msg.t == "server_hello" then
+            gui.set_text(gui.get_node("status"), "✅ Server → Client communication works!")
+            
+        elseif msg.t == "connection_established" then
+            -- Enhanced connection confirmation from server
+            gui.set_text(gui.get_node("status"), "🔗 WebSocket connection established")
+            print("WebSocket registered successfully with server version:", msg.serverVersion or "unknown")
+            
+        elseif msg.t == "heartbeat_request" then
+            -- Respond to server heartbeat requests
+            if self.session_id then
+                net.send({ t="heartbeat_response", sessionId=self.session_id })
+                print("Sent heartbeat response for session:", self.session_id)
+            end
+            
+        elseif msg.t == "waiting" then
+            -- Enhanced waiting message format with player info
+            local status = "🕐 Waiting for opponent..."
+            if msg.playerName then
+                status = "👤 " .. msg.playerName .. " - " .. status
+            end
+            if msg.message then
+                status = msg.message
+            end
+            gui.set_text(gui.get_node("status"), status)
+            print("Updated to waiting status:", status)
+            
+        elseif msg.t == "match_start" then
+            print("*** MATCH START MESSAGE RECEIVED! ***")
+            print("Match ID:", msg.matchId)
+            print("Your mark:", msg.yourMark)
+            print("Your turn:", msg.yourTurn)
+            print("Your name:", msg.yourName)
+            print("Opponent name:", msg.opponentName)
+            
+            -- Store opponent name for display
+            self.opponent_name = msg.opponentName or "Opponent"
+            
+            -- Enhanced match start with comprehensive player info
+            self.my_mark = msg.yourMark or "X"
+            self.my_turn = msg.yourTurn or false
+            self.match_id = msg.matchId or self.match_id
+            self.result = "ongoing"  -- Reset game state
+            
+            -- Create beautiful "Player vs Player" display
+            local status = "🎮 " .. self.player_name .. " vs " .. self.opponent_name .. "\n"
+            status = status .. "You are " .. self.my_mark .. " | "
+            if msg.yourTurn then
+                status = status .. "YOUR TURN!"
+            else
+                status = status .. self.opponent_name .. "'s turn"
+            end
+            gui.set_text(gui.get_node("status"), status)
+            
+            -- Update board if provided
+            if msg.board then
+                self.board = msg.board
+                update_board_visual(self)
+            end
+            
+        elseif msg.t == "game_update" or msg.t == "move_result" then
+            -- Enhanced game update format with comprehensive info
+            print("*** GAME UPDATE RECEIVED ***")
+            print("Board:", msg.board)
+            print("Your turn:", msg.yourTurn)
+            print("Message:", msg.message)
+            if msg.board then
+                self.board = msg.board
+                self.my_turn = msg.yourTurn or false
+                
+                -- Create "Player vs Player" status with turn indicator
+                local status = "� " .. self.player_name .. " vs " .. self.opponent_name .. "\n"
+                
+                if msg.moveValid == false then
+                    status = status .. "❌ Invalid move - try again!"
+                elseif self.my_turn then
+                    status = status .. "YOUR TURN - Make your move!"
+                else
+                    status = status .. self.opponent_name .. "'s turn - waiting..."
+                end
+                
+                -- Override with custom message if provided
+                if msg.message then
+                    status = "🎮 " .. self.player_name .. " vs " .. self.opponent_name .. "\n" .. msg.message
+                end
+                
+                gui.set_text(gui.get_node("status"), status)
+                update_board_visual(self)
+                print("Updated board visually with:", self.board)
+            else
+                print("No board data in game_update message")
+            end
+            
+        elseif msg.t == "game_over" then
+            -- Enhanced game over with detailed results
+            self.result = msg.result or "unknown"
+            local status = "🏁 " .. self.player_name .. " vs " .. self.opponent_name .. "\n"
+            
+            if msg.winner then
+                if msg.winner == self.my_mark then
+                    status = status .. "🎉 " .. self.player_name .. " WINS!"
+                else
+                    status = status .. "😔 " .. self.opponent_name .. " wins!"
+                end
+            elseif msg.result == "draw" then
+                status = status .. "🤝 It's a draw!"
+            else
+                status = status .. tostring(msg.result)
+            end
+            
+            if msg.winningLine then
+                status = status .. " (Line: " .. table.concat(msg.winningLine, "-") .. ")"
+            end
+            
+            status = status .. "\n\n[R] Play Again | [L] Lobby | [Q] Quit"
+            gui.set_text(gui.get_node("status"), status)
+            
+            -- Update final board state
+            if msg.board then
+                self.board = msg.board
+                update_board_visual(self)
+            end
+            
+        elseif msg.t == "match" then
+            -- Legacy match format support
+            self.match = msg.match
+            self.my_mark = (msg.seat == 1) and "X" or "O"
+            gui.set_text(gui.get_node("status"), "Matched! You are " .. self.my_mark)
+            
+        elseif msg.t == "state" then
+            -- Legacy state format support
+            self.board = msg.board
+            self.my_turn = (msg.next == self.my_mark)
+            local turn = self.my_turn and "Your turn" or "Opponent turn"
+            gui.set_text(gui.get_node("status"), turn .. " | " .. self.board)
+            draw_board(self)
+            
+        elseif msg.t == "over" then
+            -- Legacy game over format
+            self.result = msg.result
+            gui.set_text(gui.get_node("status"), "Game over: " .. tostring(self.result))
+            
+        elseif msg.t == "error" then
+            -- Enhanced error handling
+            local errorMsg = msg.msg or msg.message or msg.code or "Unknown error"
+            gui.set_text(gui.get_node("status"), "❌ Error: " .. errorMsg)
+            print("Server error:", errorMsg)
+            
+        elseif msg.t == "lobby_update" then
+            -- Handle lobby status updates
+            if msg.playersWaiting then
+                gui.set_text(gui.get_node("status"), "🏪 Lobby: " .. msg.playersWaiting .. " players waiting")
+            end
+            
+        else
+            -- Log unknown message types for debugging
+            print("Unknown message type:", msg.t, "Full message:", msg)
+            gui.set_text(gui.get_node("status"), "❓ Unknown message: " .. (msg.t or "nil"))
+        end
+    end
+end
+
+function on_input(self, action_id, action)
+    print("Input detected - State:", self.game_state, "Action:", action_id, "Released:", action.released)
+    
+    -- Handle different game states
+    if self.game_state == "name_input" then
+        handle_name_input(self, action_id, action)
+        return
+    elseif self.game_state == "connecting" then
+        -- Wait for connection
+        return
+    elseif self.game_state == "lobby" then
+        handle_lobby_input(self, action_id, action)
+        return
+    elseif self.game_state == "joining" then
+        handle_joining_input(self, action_id, action)
+        return
+    elseif self.game_state == "creating" then
+        -- Wait for match creation to complete
+        return
+    elseif self.game_state == "game_ended" then
+        handle_game_ended_input(self, action_id, action)
+        return
+    elseif self.game_state == "viewing_stats" then
+        handle_stats_input(self, action_id, action)
+        return
+    end
+    
+    -- Game playing input (original logic)
+    if action_id == hash("touch") and action.released then
+        print("*** TOUCH RELEASED DEBUG ***")
+        print("match_id:", self.match_id)
+        print("result:", self.result)
+        print("my_turn:", self.my_turn)
+        print("my_mark:", self.my_mark)
+        
+        if self.match_id == "waiting" then
+            -- Player still in lobby
+            gui.set_text(gui.get_node("status"), "⏳ Still waiting for an opponent to join...")
+            return
+        end
+        
+        if not self.match_id or self.result ~= "ongoing" then
+            -- No active match - return to lobby
+            print("*** NO ACTIVE MATCH - returning to lobby ***")
+            gui.set_text(gui.get_node("status"), "❌ No active game - returning to lobby...")
+            self.game_state = "lobby"
+            show_lobby(self)
+            return
+        end
+        
+        if not self.my_turn then
+            -- Not player's turn
+            print("*** NOT MY TURN - blocking move ***")
+            gui.set_text(gui.get_node("status"), "⌛ Wait for your turn!")
+            return
+        end
+        
+        local i = cell_at(action.x, action.y)
+        if i then 
+            print("Making move:", i, "in match:", self.match_id)
+            
+            -- Show immediate feedback with player names
+            local status = "🎮 " .. self.player_name .. " vs " .. self.opponent_name .. "\n⚡ Making move..."
+            gui.set_text(gui.get_node("status"), status)
+            
+            net.make_move(self.match_id, i, function(success)
+                print("Move response - success:", success)
+                if success then
+                    print("Move successful!")
+                    
+                    -- IMMEDIATELY update the local board with our move so we see it right away
+                    -- This is crucial for the final winning move which may end the game instantly
+                    local board_chars = {}
+                    for j = 1, #self.board do
+                        board_chars[j] = string.sub(self.board, j, j)
+                    end
+                    board_chars[i + 1] = self.my_mark  -- Convert 0-based to 1-based indexing
+                    self.board = table.concat(board_chars)
+                    update_board_visual(self)  -- Show our move immediately
+                    print("Updated local board to show our move:", self.board)
+                    
+                    -- Show waiting message with names
+                    local status = "🎮 " .. self.player_name .. " vs " .. self.opponent_name .. "\n✅ Move sent! " .. self.opponent_name .. "'s turn..."
+                    gui.set_text(gui.get_node("status"), status)
+                    self.my_turn = false  -- Assume turn switches after successful move
+                else
+                    print("Move failed!")
+                    local status = "🎮 " .. self.player_name .. " vs " .. self.opponent_name .. "\n❌ Move failed - try a different cell"
+                    gui.set_text(gui.get_node("status"), status)
+                end
+            end)
+        else
+            gui.set_text(gui.get_node("status"), "❌ Click on a valid cell")
+        end
+    end
+    
+    -- Allow returning to lobby with ESC key
+    if action_id == hash("key_esc") and action.released then
+        self.game_state = "lobby"
+        show_lobby(self)
+    end
+end
+
+-- NEW: Polling-based game state updates (replaces WebSocket notifications)
+function poll_game_state_once(self)
+    print("Polling game state...")
+    net.poll_game_state(function(success, game_state)
+        if success and game_state then
+            print("Game state received:", game_state.raw or "parsed data")
+            handle_game_state_update(self, game_state)
+        else
+            print("Game state poll failed")
+        end
+    end)
+end
+
+function start_polling_timer(self)
+    -- Cancel any existing timer
+    if self.polling_timer then
+        timer.cancel(self.polling_timer)
+    end
+    
+    -- Poll every 1 second while in playing state
+    self.polling_timer = timer.delay(1.0, true, function()
+        if self.game_state == "playing" then
+            poll_game_state_once(self)
+        else
+            -- Stop polling if not in playing state
+            if self.polling_timer then
+                timer.cancel(self.polling_timer)
+                self.polling_timer = nil
+            end
+        end
+    end)
+end
+
+function handle_game_state_update(self, game_state)
+    print("=== GAME STATE UPDATE ===")
+    print("Has match:", game_state.hasMatch)
+    
+    if game_state.hasMatch then
+        print("Match ID:", game_state.matchId)
+        print("Board:", game_state.board)
+        print("Your turn:", game_state.yourTurn)
+        print("Your mark:", game_state.yourMark)
+        print("Status:", game_state.status)
+        print("Message:", game_state.message)
+        
+        -- Update game state
+        if game_state.board then
+            self.board = game_state.board
+            self.my_turn = game_state.yourTurn or false
+            self.my_mark = game_state.yourMark or "?"
+            self.match_id = game_state.matchId
+            self.result = game_state.result or "ongoing"
+            
+            -- Update UI
+            local status = game_state.message or "Game in progress"
+            gui.set_text(gui.get_node("status"), status)
+            update_board_visual(self)
+            
+            print("Updated game state - my_turn:", self.my_turn, "my_mark:", self.my_mark)
+        end
+    else
+        print("No active match found")
+        
+        -- Check if we just finished a game (had a match but now don't)
+        if self.game_state == "playing" and self.match_id then
+            print("Game ended! Last board:", self.board or "unknown")
+            print("My mark was:", self.my_mark or "unknown")
+            
+            -- Determine who won by checking the final board
+            local winner = determine_winner(self.board)
+            print("Winner determined:", winner)
+            
+            self.game_state = "game_ended"
+            self.game_result = {
+                winner = winner,
+                my_mark = self.my_mark,
+                final_board = self.board
+            }
+            
+            show_game_result(self)
+        end
+    end
+end
+
+-- NEW: Determine winner from board state
+function determine_winner(board)
+    if not board or #board ~= 9 then 
+        print("*** DETERMINE_WINNER: Invalid board:", board)
+        return "unknown" 
+    end
+    
+    print("*** DETERMINE_WINNER: Checking board:", board)
+    
+    local wins = {
+        {1,2,3}, {4,5,6}, {7,8,9}, -- rows
+        {1,4,7}, {2,5,8}, {3,6,9}, -- columns  
+        {1,5,9}, {3,5,7}           -- diagonals
+    }
+    
+    for _, win in ipairs(wins) do
+        local a, b, c = win[1], win[2], win[3]
+        local mark_a = string.sub(board, a, a)
+        local mark_b = string.sub(board, b, b)
+        local mark_c = string.sub(board, c, c)
+        
+        print("*** DETERMINE_WINNER: Checking positions", a, b, c, ":", mark_a, mark_b, mark_c)
+        
+        if mark_a ~= "." and mark_a == mark_b and mark_b == mark_c then
+            print("*** DETERMINE_WINNER: Found winner:", mark_a)
+            return mark_a
+        end
+    end
+    
+    -- Check for draw (no empty spaces)
+    if not string.find(board, "%.") then
+        return "draw"
+    end
+    
+    return "unknown"
+end
+
+-- NEW: Show game result screen
+function show_game_result(self)
+    local result = self.game_result
+    local winner = result.winner
+    local my_mark = result.my_mark
+    
+    local status = ""
+    
+    if winner == "draw" then
+        status = "🤝 GAME DRAW! 🤝\n\n"
+        status = status .. "Nobody wins this time!\n\n"
+    elseif winner == my_mark then
+        status = "🎉 YOU WIN! 🎉\n\n"
+        status = status .. "Congratulations " .. self.player_name .. "!\n"
+        status = status .. "You played as " .. my_mark .. " and won!\n\n"
+    elseif winner ~= "unknown" then
+        status = "😞 YOU LOSE 😞\n\n"
+        status = status .. "Better luck next time " .. self.player_name .. "!\n"
+        status = status .. "You played as " .. my_mark .. ", but " .. winner .. " won.\n\n"
+    else
+        status = "🤔 GAME ENDED 🤔\n\n"
+        status = status .. "The game ended unexpectedly.\n\n"
+    end
+    
+    status = status .. "FINAL BOARD:\n"
+    status = status .. format_board_for_display(result.final_board) .. "\n\n"
+    status = status .. "OPTIONS:\n"
+    status = status .. "🔄 [R] Play Again (New Match)\n"
+    status = status .. "🏠 [L] Back to Lobby\n"
+    status = status .. "❌ [Q] Quit Game"
+    
+    gui.set_text(gui.get_node("status"), status)
+    
+    print("*** GAME RESULT DISPLAYED ***")
+    print("Winner:", winner, "My mark:", my_mark)
+end
+
+-- NEW: Format board for text display
+function format_board_for_display(board)
+    if not board or #board ~= 9 then return "???\n???\n???" end
+    
+    local function format_cell(char)
+        if char == "." then return " " else return char end
+    end
+    
+    local row1 = format_cell(string.sub(board, 1, 1)) .. "|" .. format_cell(string.sub(board, 2, 2)) .. "|" .. format_cell(string.sub(board, 3, 3))
+    local row2 = format_cell(string.sub(board, 4, 4)) .. "|" .. format_cell(string.sub(board, 5, 5)) .. "|" .. format_cell(string.sub(board, 6, 6))
+    local row3 = format_cell(string.sub(board, 7, 7)) .. "|" .. format_cell(string.sub(board, 8, 8)) .. "|" .. format_cell(string.sub(board, 9, 9))
+    
+    return row1 .. "\n" .. row2 .. "\n" .. row3
+end
