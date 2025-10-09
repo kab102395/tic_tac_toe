@@ -4,12 +4,15 @@ java-server/.gradle/
 java-server/bin/
 java-server/database/
 *.class
-*.jar
 *.war
 *.ear
 *.nar
 hs_err_pid*
 replay_pid*
+
+# Keep Gradle wrapper (needed for builds)
+!gradle-wrapper.jar
+!gradle-wrapper.properties
 
 # Database files
 *.db
@@ -53,14 +56,14 @@ Thumbs.db
 
 # Logs
 *.log
-log.txt
-
-# Test files
-test_*.ps1
-test_*.html
-*.html
+java-server/build/x86_64-win32/log.txt
 
 # Temporary files
 *.tmp
 *.temp
 *~
+
+# Keep test files and documentation
+!test_*.ps1
+!test_*.html
+!database_er_diagram.html

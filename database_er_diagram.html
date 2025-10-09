@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicTacToe Database ER Diagram</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+        
+        #diagram {
+            border: 2px solid #34495e;
+            border-radius: 8px;
+            background: #ecf0f1;
+        }
+        
+        .table-box {
+            fill: #3498db;
+            stroke: #2980b9;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .table-box:hover {
+            fill: #e74c3c;
+            stroke: #c0392b;
+        }
+        
+        .table-title {
+            fill: white;
+            font-weight: bold;
+            font-size: 16px;
+            text-anchor: middle;
+            cursor: pointer;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .field-text {
+            fill: #2c3e50;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        
+        .field-key {
+            fill: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .field-foreign {
+            fill: #f39c12;
+            font-weight: bold;
+        }
+        
+        .relationship-line {
+            stroke: #2c3e50;
+            stroke-width: 2.5;
+            fill: none;
+        }
+        
+        .relationship-label {
+            fill: #2c3e50;
+            font-size: 11px;
+            font-weight: bold;
+            text-anchor: middle;
+            background: white;
+            padding: 2px;
+        }
+        
+        .crow-foot {
+            stroke: #2c3e50;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .one-mark {
+            stroke: #2c3e50;
+            stroke-width: 2;
+        }
+        
+        .legend {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 15px;
+            margin-right: 5px;
+            vertical-align: middle;
+            border: 1px solid #ccc;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .control-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #2980b9;
+        }
+        
+        .info-panel {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 TicTacToe Database Schema</h1>
+        <p class="subtitle">Interactive Entity-Relationship Diagram | CS4800 Assignment 2</p>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="resetZoom()">Reset View</button>
+            <button class="control-btn" onclick="toggleRelationships()">Toggle Relationships</button>
+            <button class="control-btn" onclick="highlightCoreFlow()">Highlight Game Flow</button>
+        </div>
+        
+        <svg id="diagram" width="1360" height="800"></svg>
+        
+        <div class="legend">
+            <h3>Legend</h3>
+            <div class="legend-item">
+                <span class="legend-color" style="background: #3498db;"></span>
+                <span>Database Table</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background: #e74c3c;"></span>
+                <span>Primary Key</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background: #f39c12;"></span>
+                <span>Foreign Key</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background: #2c3e50;"></span>
+                <span>Regular Field</span>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h4>📊 Database Statistics</h4>
+            <p><strong>Schema Version:</strong> 3 (with migration support)</p>
+            <p><strong>Total Tables:</strong> 8 (Core: 4, System: 4)</p>
+            <p><strong>Database Engine:</strong> SQLite with WAL mode for concurrency</p>
+            <p><strong>Connection Pool:</strong> 10 connections with thread-safe access</p>
+            <p><strong>Key Features:</strong> Session-based authentication, Real-time health monitoring, Persistent matchmaking, Retry logic</p>
+        </div>
+    </div>
+
+    <script>
+        // Database schema definition with better positioning
+        const tables = {
+            player_sessions: {
+                x: 50, y: 50,
+                fields: [
+                    { name: 'session_id', type: 'primary', desc: 'TEXT PRIMARY KEY' },
+                    { name: 'player_name', type: 'field', desc: 'TEXT NOT NULL' },
+                    { name: 'connected_at', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'last_heartbeat', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'websocket_id', type: 'field', desc: 'TEXT' },
+                    { name: 'connection_status', type: 'field', desc: 'TEXT DEFAULT \'connected\'' },
+                    { name: 'retry_count', type: 'field', desc: 'INTEGER DEFAULT 0' }
+                ]
+            },
+            game_matches: {
+                x: 350, y: 50,
+                fields: [
+                    { name: 'match_id', type: 'primary', desc: 'TEXT PRIMARY KEY' },
+                    { name: 'player1_session', type: 'foreign', desc: 'TEXT' },
+                    { name: 'player2_session', type: 'foreign', desc: 'TEXT' },
+                    { name: 'board', type: 'field', desc: 'TEXT DEFAULT \'.........\'' },
+                    { name: 'current_turn', type: 'field', desc: 'TEXT DEFAULT \'X\'' },
+                    { name: 'status', type: 'field', desc: 'TEXT DEFAULT \'waiting\'' },
+                    { name: 'result', type: 'field', desc: 'TEXT DEFAULT \'ongoing\'' },
+                    { name: 'created_at', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'updated_at', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'last_move_at', type: 'field', desc: 'TIMESTAMP' }
+                ]
+            },
+            game_moves: {
+                x: 700, y: 50,
+                fields: [
+                    { name: 'move_id', type: 'primary', desc: 'INTEGER PRIMARY KEY' },
+                    { name: 'match_id', type: 'foreign', desc: 'TEXT NOT NULL' },
+                    { name: 'session_id', type: 'foreign', desc: 'TEXT NOT NULL' },
+                    { name: 'cell_position', type: 'field', desc: 'INTEGER NOT NULL' },
+                    { name: 'mark', type: 'field', desc: 'TEXT NOT NULL' },
+                    { name: 'timestamp', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'state_version', type: 'field', desc: 'INTEGER DEFAULT 1' },
+                    { name: 'validated', type: 'field', desc: 'BOOLEAN DEFAULT FALSE' }
+                ]
+            },
+            player_stats: {
+                x: 1050, y: 50,
+                fields: [
+                    { name: 'player_name', type: 'primary', desc: 'TEXT PRIMARY KEY' },
+                    { name: 'total_games', type: 'field', desc: 'INTEGER DEFAULT 0' },
+                    { name: 'wins', type: 'field', desc: 'INTEGER DEFAULT 0' },
+                    { name: 'losses', type: 'field', desc: 'INTEGER DEFAULT 0' },
+                    { name: 'draws', type: 'field', desc: 'INTEGER DEFAULT 0' },
+                    { name: 'win_rate', type: 'field', desc: 'REAL DEFAULT 0.0' },
+                    { name: 'last_game', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'created_at', type: 'field', desc: 'TIMESTAMP' }
+                ]
+            },
+            pending_notifications: {
+                x: 50, y: 400,
+                fields: [
+                    { name: 'id', type: 'primary', desc: 'INTEGER PRIMARY KEY' },
+                    { name: 'session_id', type: 'foreign', desc: 'TEXT NOT NULL' },
+                    { name: 'notification_type', type: 'field', desc: 'TEXT NOT NULL' },
+                    { name: 'data', type: 'field', desc: 'TEXT' },
+                    { name: 'created_at', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'attempts', type: 'field', desc: 'INTEGER DEFAULT 0' },
+                    { name: 'max_attempts', type: 'field', desc: 'INTEGER DEFAULT 3' },
+                    { name: 'next_retry', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'delivered', type: 'field', desc: 'BOOLEAN DEFAULT FALSE' }
+                ]
+            },
+            connection_health: {
+                x: 350, y: 400,
+                fields: [
+                    { name: 'session_id', type: 'primary', desc: 'TEXT PRIMARY KEY' },
+                    { name: 'last_ping', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'last_pong', type: 'field', desc: 'TIMESTAMP' },
+                    { name: 'ping_count', type: 'field', desc: 'INTEGER DEFAULT 0' },
+                    { name: 'missed_pings', type: 'field', desc: 'INTEGER DEFAULT 0' },
+                    { name: 'connection_quality', type: 'field', desc: 'REAL DEFAULT 1.0' }
+                ]
+            },
+            lobby_state: {
+                x: 700, y: 400,
+                fields: [
+                    { name: 'id', type: 'primary', desc: 'INTEGER PRIMARY KEY' },
+                    { name: 'waiting_player_id', type: 'foreign', desc: 'TEXT' },
+                    { name: 'waiting_player_name', type: 'field', desc: 'TEXT' },
+                    { name: 'waiting_since', type: 'field', desc: 'TIMESTAMP' }
+                ]
+            },
+            schema_version: {
+                x: 1050, y: 400,
+                fields: [
+                    { name: 'version', type: 'primary', desc: 'INTEGER PRIMARY KEY' }
+                ]
+            }
+        };
+
+        // Relationships definition with cardinality
+        const relationships = [
+            { 
+                from: 'player_sessions', fromField: 'session_id', 
+                to: 'game_matches', toField: 'player1_session', 
+                label: 'plays in', fromCard: 'one', toCard: 'many',
+                fromSide: 'right', toSide: 'left'
+            },
+            { 
+                from: 'player_sessions', fromField: 'session_id', 
+                to: 'game_matches', toField: 'player2_session', 
+                label: 'plays in', fromCard: 'one', toCard: 'many',
+                fromSide: 'right', toSide: 'left', offset: 20
+            },
+            { 
+                from: 'game_matches', fromField: 'match_id', 
+                to: 'game_moves', toField: 'match_id', 
+                label: 'contains', fromCard: 'one', toCard: 'many',
+                fromSide: 'right', toSide: 'left'
+            },
+            { 
+                from: 'player_sessions', fromField: 'session_id', 
+                to: 'game_moves', toField: 'session_id', 
+                label: 'makes', fromCard: 'one', toCard: 'many',
+                fromSide: 'top', toSide: 'top', routing: 'curved'
+            },
+            { 
+                from: 'player_sessions', fromField: 'player_name', 
+                to: 'player_stats', toField: 'player_name', 
+                label: 'tracked by', fromCard: 'one', toCard: 'one',
+                fromSide: 'right', toSide: 'left', routing: 'curved'
+            },
+            { 
+                from: 'player_sessions', fromField: 'session_id', 
+                to: 'pending_notifications', toField: 'session_id', 
+                label: 'receives', fromCard: 'one', toCard: 'many',
+                fromSide: 'bottom', toSide: 'top'
+            },
+            { 
+                from: 'player_sessions', fromField: 'session_id', 
+                to: 'connection_health', toField: 'session_id', 
+                label: 'monitors', fromCard: 'one', toCard: 'one',
+                fromSide: 'bottom', toSide: 'top', offset: 50
+            },
+            { 
+                from: 'lobby_state', fromField: 'waiting_player_id', 
+                to: 'player_sessions', toField: 'session_id', 
+                label: 'waits in', fromCard: 'one', toCard: 'one',
+                fromSide: 'top', toSide: 'bottom', routing: 'curved'
+            }
+        ];
+
+        // SVG setup
+        const svg = d3.select('#diagram');
+        const width = +svg.attr('width');
+        const height = +svg.attr('height');
+
+        // Add marker definitions for ER diagram
+        const defs = svg.append('defs');
+        
+        // Crow's foot marker (many side)
+        defs.append('marker')
+            .attr('id', 'crowfoot')
+            .attr('viewBox', '0 0 20 20')
+            .attr('refX', 20)
+            .attr('refY', 10)
+            .attr('markerWidth', 8)
+            .attr('markerHeight', 8)
+            .attr('orient', 'auto')
+            .append('g')
+            .selectAll('line')
+            .data([[5, 5, 15, 10], [5, 15, 15, 10], [15, 10, 20, 10]])
+            .enter()
+            .append('line')
+            .attr('x1', d => d[0])
+            .attr('y1', d => d[1])
+            .attr('x2', d => d[2])
+            .attr('y2', d => d[3])
+            .attr('stroke', '#2c3e50')
+            .attr('stroke-width', 2);
+
+        // One marker (one side)
+        defs.append('marker')
+            .attr('id', 'one')
+            .attr('viewBox', '0 0 20 20')
+            .attr('refX', 15)
+            .attr('refY', 10)
+            .attr('markerWidth', 8)
+            .attr('markerHeight', 8)
+            .attr('orient', 'auto')
+            .append('g')
+            .selectAll('line')
+            .data([[15, 5, 15, 15], [10, 10, 15, 10]])
+            .enter()
+            .append('line')
+            .attr('x1', d => d[0])
+            .attr('y1', d => d[1])
+            .attr('x2', d => d[2])
+            .attr('y2', d => d[3])
+            .attr('stroke', '#2c3e50')
+            .attr('stroke-width', 2);
+
+        // Create main group for zoom/pan
+        const g = svg.append('g');
+
+        let showRelationships = true;
+        let highlightMode = false;
+
+        // Zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 3])
+            .on('zoom', (event) => {
+                g.attr('transform', event.transform);
+            });
+
+        svg.call(zoom);
+
+        // Helper functions for connection points
+        function getConnectionPoint(tableName, side, offset = 0) {
+            const table = tables[tableName];
+            const tableHeight = table.fields.length * 18 + 40;
+            const tableWidth = 220;
+            
+            switch(side) {
+                case 'top':
+                    return { x: table.x + tableWidth/2 + offset, y: table.y };
+                case 'bottom':
+                    return { x: table.x + tableWidth/2 + offset, y: table.y + tableHeight };
+                case 'left':
+                    return { x: table.x, y: table.y + tableHeight/2 + offset };
+                case 'right':
+                    return { x: table.x + tableWidth, y: table.y + tableHeight/2 + offset };
+                default:
+                    return { x: table.x + tableWidth/2, y: table.y + tableHeight/2 };
+            }
+        }
+
+        // Draw relationships with proper ER notation
+        function drawRelationships() {
+            g.selectAll('.relationship-line').remove();
+            g.selectAll('.relationship-label').remove();
+            g.selectAll('.relationship-path').remove();
+
+            if (!showRelationships) return;
+
+            relationships.forEach(rel => {
+                const fromPoint = getConnectionPoint(rel.from, rel.fromSide, rel.offset || 0);
+                const toPoint = getConnectionPoint(rel.to, rel.toSide, rel.offset || 0);
+
+                // Create path for relationship line
+                let pathData;
+                if (rel.routing === 'curved') {
+                    // Create curved path for complex relationships
+                    if (rel.label === 'makes') {
+                        // Special routing for player_sessions -> game_moves (over the top)
+                        const controlY = Math.min(fromPoint.y, toPoint.y) - 80;
+                        pathData = `M ${fromPoint.x} ${fromPoint.y} Q ${(fromPoint.x + toPoint.x) / 2} ${controlY} ${toPoint.x} ${toPoint.y}`;
+                    } else if (rel.label === 'tracked by') {
+                        // Special routing for player_sessions -> player_stats (curved right)
+                        const controlX = fromPoint.x + 150;
+                        const controlY = fromPoint.y - 100;
+                        pathData = `M ${fromPoint.x} ${fromPoint.y} Q ${controlX} ${controlY} ${toPoint.x} ${toPoint.y}`;
+                    } else if (rel.label === 'waits in') {
+                        // Special routing for lobby_state -> player_sessions (curved up)
+                        const controlX = (fromPoint.x + toPoint.x) / 2 + 100;
+                        const controlY = fromPoint.y - 80;
+                        pathData = `M ${fromPoint.x} ${fromPoint.y} Q ${controlX} ${controlY} ${toPoint.x} ${toPoint.y}`;
+                    } else {
+                        // Default curved path
+                        const midX = (fromPoint.x + toPoint.x) / 2;
+                        const midY = (fromPoint.y + toPoint.y) / 2;
+                        const controlX = rel.fromSide === 'right' ? fromPoint.x + 100 : fromPoint.x - 100;
+                        const controlY = rel.toSide === 'top' ? toPoint.y - 50 : toPoint.y + 50;
+                        pathData = `M ${fromPoint.x} ${fromPoint.y} Q ${controlX} ${controlY} ${toPoint.x} ${toPoint.y}`;
+                    }
+                } else {
+                    // Straight line with 90-degree bends
+                    if (rel.fromSide === 'right' && rel.toSide === 'left') {
+                        pathData = `M ${fromPoint.x} ${fromPoint.y} L ${toPoint.x} ${toPoint.y}`;
+                    } else if (rel.fromSide === 'bottom' && rel.toSide === 'top') {
+                        pathData = `M ${fromPoint.x} ${fromPoint.y} L ${toPoint.x} ${toPoint.y}`;
+                    } else {
+                        // L-shaped connection
+                        const midX = (fromPoint.x + toPoint.x) / 2;
+                        pathData = `M ${fromPoint.x} ${fromPoint.y} L ${midX} ${fromPoint.y} L ${midX} ${toPoint.y} L ${toPoint.x} ${toPoint.y}`;
+                    }
+                }
+
+                // Draw relationship path
+                const relationshipPath = g.append('path')
+                    .attr('class', 'relationship-path')
+                    .attr('d', pathData)
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 2.5)
+                    .attr('fill', 'none');
+
+                // Add markers based on cardinality
+                if (rel.fromCard === 'one') {
+                    relationshipPath.attr('marker-start', 'url(#one)');
+                }
+                if (rel.toCard === 'many') {
+                    relationshipPath.attr('marker-end', 'url(#crowfoot)');
+                } else if (rel.toCard === 'one') {
+                    relationshipPath.attr('marker-end', 'url(#one)');
+                }
+
+                // Add relationship label with better positioning
+                let labelX, labelY;
+                if (rel.routing === 'curved') {
+                    if (rel.label === 'makes') {
+                        labelX = (fromPoint.x + toPoint.x) / 2;
+                        labelY = Math.min(fromPoint.y, toPoint.y) - 60;
+                    } else if (rel.label === 'tracked by') {
+                        labelX = fromPoint.x + 100;
+                        labelY = fromPoint.y - 80;
+                    } else if (rel.label === 'waits in') {
+                        labelX = (fromPoint.x + toPoint.x) / 2 + 80;
+                        labelY = fromPoint.y - 60;
+                    } else {
+                        labelX = (fromPoint.x + toPoint.x) / 2;
+                        labelY = (fromPoint.y + toPoint.y) / 2;
+                    }
+                } else {
+                    labelX = (fromPoint.x + toPoint.x) / 2;
+                    labelY = (fromPoint.y + toPoint.y) / 2;
+                }
+
+                g.append('rect')
+                    .attr('x', labelX - rel.label.length * 3)
+                    .attr('y', labelY - 8)
+                    .attr('width', rel.label.length * 6 + 4)
+                    .attr('height', 16)
+                    .attr('fill', 'white')
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 1);
+
+                g.append('text')
+                    .attr('class', 'relationship-label')
+                    .attr('x', labelX)
+                    .attr('y', labelY + 4)
+                    .text(rel.label);
+            });
+        }
+
+        // Draw tables
+        function drawTables() {
+            Object.entries(tables).forEach(([tableName, table]) => {
+                const tableGroup = g.append('g')
+                    .attr('class', 'table-group')
+                    .attr('transform', `translate(${table.x}, ${table.y})`);
+
+                const tableHeight = table.fields.length * 18 + 40;
+                const tableWidth = 220;
+
+                // Table box with shadow
+                tableGroup.append('rect')
+                    .attr('x', 2)
+                    .attr('y', 2)
+                    .attr('width', tableWidth)
+                    .attr('height', tableHeight)
+                    .attr('rx', 5)
+                    .attr('fill', 'rgba(0,0,0,0.2)');
+
+                tableGroup.append('rect')
+                    .attr('class', 'table-box')
+                    .attr('width', tableWidth)
+                    .attr('height', tableHeight)
+                    .attr('rx', 5)
+                    .on('click', () => highlightTable(tableName));
+
+                // Table title background
+                tableGroup.append('rect')
+                    .attr('width', tableWidth)
+                    .attr('height', 25)
+                    .attr('rx', 5)
+                    .attr('fill', '#2c3e50');
+
+                // Table title
+                tableGroup.append('text')
+                    .attr('class', 'table-title')
+                    .attr('x', tableWidth/2)
+                    .attr('y', 18)
+                    .text(tableName);
+
+                // Separator line
+                tableGroup.append('line')
+                    .attr('x1', 0)
+                    .attr('y1', 25)
+                    .attr('x2', tableWidth)
+                    .attr('y2', 25)
+                    .attr('stroke', '#2c3e50')
+                    .attr('stroke-width', 1);
+
+                // Table fields
+                table.fields.forEach((field, i) => {
+                    const fieldY = 40 + i * 18;
+                    
+                    // Add key indicators
+                    if (field.type === 'primary') {
+                        tableGroup.append('text')
+                            .attr('x', 8)
+                            .attr('y', fieldY)
+                            .attr('fill', '#e74c3c')
+                            .attr('font-weight', 'bold')
+                            .attr('font-size', '14px')
+                            .text('🔑');
+                    } else if (field.type === 'foreign') {
+                        tableGroup.append('text')
+                            .attr('x', 8)
+                            .attr('y', fieldY)
+                            .attr('fill', '#f39c12')
+                            .attr('font-weight', 'bold')
+                            .attr('font-size', '14px')
+                            .text('🔗');
+                    }
+                    
+                    tableGroup.append('text')
+                        .attr('class', `field-text ${field.type === 'primary' ? 'field-key' : field.type === 'foreign' ? 'field-foreign' : ''}`)
+                        .attr('x', field.type === 'field' ? 8 : 28)
+                        .attr('y', fieldY)
+                        .text(field.name);
+
+                    // Field type on the right
+                    tableGroup.append('text')
+                        .attr('class', 'field-text')
+                        .attr('x', tableWidth - 8)
+                        .attr('y', fieldY)
+                        .attr('text-anchor', 'end')
+                        .attr('font-size', '10px')
+                        .attr('fill', '#7f8c8d')
+                        .text(field.desc.split(' ')[0]); // Show just the type
+                });
+            });
+        }
+
+        // Highlight table function
+        function highlightTable(tableName) {
+            // Reset all tables
+            g.selectAll('.table-box').attr('fill', '#3498db');
+            
+            // Highlight selected table
+            g.selectAll('.table-group')
+                .filter(function() {
+                    return d3.select(this).attr('transform').includes(tables[tableName].x);
+                })
+                .select('.table-box')
+                .attr('fill', '#e74c3c');
+
+            console.log(`Selected table: ${tableName}`);
+        }
+
+        // Control functions
+        function resetZoom() {
+            svg.transition().duration(750).call(
+                zoom.transform,
+                d3.zoomIdentity
+            );
+        }
+
+        function toggleRelationships() {
+            showRelationships = !showRelationships;
+            drawRelationships();
+        }
+
+        function highlightCoreFlow() {
+            highlightMode = !highlightMode;
+            
+            if (highlightMode) {
+                // Highlight core game flow tables
+                g.selectAll('.table-box').attr('fill', '#95a5a6');
+                
+                ['player_sessions', 'game_matches', 'game_moves'].forEach(tableName => {
+                    g.selectAll('.table-group')
+                        .filter(function() {
+                            return d3.select(this).attr('transform').includes(tables[tableName].x);
+                        })
+                        .select('.table-box')
+                        .attr('fill', '#e74c3c');
+                });
+            } else {
+                g.selectAll('.table-box').attr('fill', '#3498db');
+            }
+        }
+
+        // Make functions global for button access
+        window.resetZoom = resetZoom;
+        window.toggleRelationships = toggleRelationships;
+        window.highlightCoreFlow = highlightCoreFlow;
+
+        // Initial draw
+        drawTables();
+        drawRelationships();
+
+        // Add some animations
+        g.selectAll('.table-group')
+            .style('opacity', 0)
+            .transition()
+            .duration(500)
+            .delay((d, i) => i * 100)
+            .style('opacity', 1);
+    </script>
+</body>
+</html>
