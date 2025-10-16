@@ -50,7 +50,12 @@ After running the script, verify that copilot has been removed:
 git shortlog -sne --all
 ```
 
-You should only see "kab102395" in the contributor list.
+**Expected output:**
+```
+     X	kab102395 <kab102395@users.noreply.github.com>
+```
+
+You should **only** see "kab102395" in the contributor list. If you still see "copilot-swe-agent[bot]", the history cleanup was not successful.
 
 ## Why This Can't Be Automated
 
