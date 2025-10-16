@@ -6,6 +6,17 @@ This document explains how to complete the removal of "copilot-swe-agent[bot]" f
 
 The repository currently has commits authored by "copilot-swe-agent[bot]". To remove this contributor from the Git history, the commit history needs to be rewritten.
 
+## Quick Start (Automated Scripts)
+
+Two automated scripts are provided to make this process easier:
+
+- **For Linux/Mac**: Run `./cleanup_history.sh`
+- **For Windows**: Run `.\cleanup_history.ps1` in PowerShell
+
+These scripts will guide you through the entire process with safety confirmations at each critical step.
+
+If you prefer to run the commands manually, continue reading below.
+
 ## Steps to Complete History Cleanup
 
 The history has been locally rewritten, but pushing these changes requires force pushing to override the remote history. Here's how to complete the process:
