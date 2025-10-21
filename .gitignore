@@ -15,9 +15,7 @@ replay_pid*
 !gradle-wrapper.properties
 
 # Database files
-*.db
-*.db-shm
-*.db-wal
+
 
 # Defold build artifacts
 defold-client/build/
