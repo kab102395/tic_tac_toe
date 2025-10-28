@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Server Architecture - Part 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 20px 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        h4 {
+            color: #667eea;
+            margin: 15px 0 8px 0;
+            font-size: 1.1em;
+        }
+        
+        p {
+            margin: 15px 0;
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .highlight-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .code-block code {
+            display: block;
+            white-space: pre;
+        }
+        
+        .diagram {
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+        
+        .nav-section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .nav-section h3 {
+            margin-top: 0;
+        }
+        
+        .nav-links {
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin: 8px 0;
+        }
+        
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+            color: #764ba2;
+        }
+        
+        .footer {
+            background: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid #ddd;
+            color: #777;
+            margin-top: 30px;
+        }
+        
+        .part-indicator {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .section-box {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .warning-box {
+            background: #ffe6e6;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Tic-Tac-Toe Server Architecture</h1>
+            <p>Senior Bachelor Level Technical Breakdown</p>
+            <div class="part-indicator">PART 2 - GameService, Cache & Database</div>
+        </div>
+        
+        <div class="content">
+            
+            <div class="nav-section">
+                <h3>📑 Documentation Parts</h3>
+                <ul class="nav-links">
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part1.html">← Back to Part 1</a></li>
+                    <li><strong>Part 2 (Current)</strong> - GameService, Cache & Database</li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part3.html">Part 3 →</a> - Communication Flows & Threading</li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part4.html">Part 4</a> - Defold Integration & Performance</li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part5.html">Part 5</a> - Error Handling & Conclusion</li>
+                </ul>
+            </div>
+            
+            <!-- ===== GAMESERVICE ===== -->
+            <h2>2.4 GameService - Core Game Logic Orchestrator</h2>
+            
+            <p><strong>Purpose:</strong> Implements the core game mechanics and matchmaking logic.</p>
+            
+            <p><strong>Key Responsibilities:</strong></p>
+            
+            <div class="code-block"><code>1. joinGame(sessionId, playerName)
+   ├─ Single player? → Put in lobby, return "waiting"
+   ├─ Second player arrives? → Create match, return matchId
+   └─ Uses synchronized lobbyLock to prevent race conditions
+
+2. makeMove(sessionId, matchId, cellPosition)
+   ├─ Validate move (position 0-8, not occupied)
+   ├─ Update game cache
+   ├─ Check win/draw/ongoing
+   ├─ Broadcast state to both players
+   └─ If game ends → save to database
+
+3. getAvailableMatches()
+   ├─ Query database for waiting games
+   └─ Return with host player name
+
+4. createMatch(sessionId, playerName, matchName)
+   ├─ Create new game room
+   └─ Set status to "waiting" for opponents</code></div>
+            
+            <h3>Critical Design: Synchronized Lobby Lock</h3>
+            
+            <div class="code-block"><code>synchronized (lobbyLock) {
+    if (waitingPlayerId == null) {
+        // First player
+        waitingPlayerId = sessionId;
+        return "waiting";
+    } else if (!waitingPlayerId.equals(sessionId)) {
+        // Second player - create match
+        String matchId = UUID.randomUUID().toString();
+        createGame(matchId, waitingPlayerId, sessionId, ...);
+        waitingPlayerId = null; // Clear lobby
+        return matchId;
+    }
+}</code></div>
+            
+            <p><strong>Why Synchronization?</strong></p>
+            <ul>
+                <li><strong>Race Condition Prevention:</strong> Two players could simultaneously call <code>joinGame()</code> while lobby is empty</li>
+                <li><strong>Without Lock:</strong> Both see <code>waitingPlayerId == null</code>, both become "first player"</li>
+                <li><strong>With Lock:</strong> Only one thread can execute the critical section; second thread waits, sees occupied slot, creates match</li>
+            </ul>
+            
+            <div class="highlight-box">
+                <strong>Example Race Condition Scenario (Without Synchronization):</strong>
+                <div class="code-block"><code>Timeline:
+[T1] Player1.joinGame() → Check: waitingPlayerId == null? ✓
+[T2] Player2.joinGame() → Check: waitingPlayerId == null? ✓  (Both see null!)
+[T1] Player1: Set waitingPlayerId = "P1", return "waiting"
+[T2] Player2: Set waitingPlayerId = "P2", return "waiting"  (Overwrites!)
+
+Result: Both think they're waiting! Game never starts! 💥</code></div>
+            </div>
+            
+            <!-- ===== GAMESTATECACHE ===== -->
+            <h2>2.5 GameStateCache - High-Performance In-Memory Cache</h2>
+            
+            <p><strong>Purpose:</strong> Eliminates database hits during active gameplay for maximum responsiveness.</p>
+            
+            <h3>Design Pattern: Write-Through Cache</h3>
+            
+            <div class="code-block"><code>Active Game Flow:
+1. Player makes move → gameCache.makeMove() [instant, in-memory]
+2. Move stored in ConcurrentHashMap
+3. Game ends → gameCache saveCompletedGameToDatabase()
+4. Only then is database updated
+
+Why This Approach:
+• Real-time gameplay doesn't need database for every move
+• Database I/O is expensive (~1-10ms per query)
+• In-memory operations are nanoseconds
+• Only final results need persistence</code></div>
+            
+            <h3>Data Structures</h3>
+            
+            <div class="code-block"><code>ConcurrentHashMap&lt;String, GameState&gt; activeGames
+├─ Key: matchId (e.g., "M-uuid-123")
+└─ Value: GameState
+    ├─ matchId, sessionId1, sessionId2
+    ├─ board (string: ".....X.O.")
+    ├─ currentPlayer ("X" or "O")
+    ├─ status ("active", "finished", "waiting")
+    ├─ result ("X_wins", "O_wins", "draw", "ongoing")
+    └─ lastUpdate (timestamp)
+
+ConcurrentHashMap&lt;String, PlayerSession&gt; activeSessions
+├─ Key: sessionId
+└─ Value: PlayerSession
+    ├─ sessionId, playerName
+    ├─ connectionStatus ("connected", "disconnected")
+    ├─ lastHeartbeat
+    └─ currentMatch</code></div>
+            
+            <h3>Why ConcurrentHashMap?</h3>
+            
+            <table>
+                <tr>
+                    <th>Feature</th>
+                    <th>ConcurrentHashMap</th>
+                    <th>Collections.synchronizedMap()</th>
+                </tr>
+                <tr>
+                    <td>Lock Type</td>
+                    <td>Lock striping (multiple locks)</td>
+                    <td>Single global lock</td>
+                </tr>
+                <tr>
+                    <td>Concurrent Reads</td>
+                    <td>✓ Multiple threads can read simultaneously</td>
+                    <td>✗ One read blocks others</td>
+                </tr>
+                <tr>
+                    <td>Read Performance</td>
+                    <td>O(1) nanoseconds</td>
+                    <td>O(1) with lock overhead (~100ns)</td>
+                </tr>
+                <tr>
+                    <td>Best For</td>
+                    <td>High-concurrency read-heavy workloads</td>
+                    <td>Simple synchronized access</td>
+                </tr>
+            </table>
+            
+            <p><strong>Why NOT Use Regular HashMap?</strong> Would have race conditions where one thread modifies while another reads, causing corrupted state or ConcurrentModificationException.</p>
+            
+            <h3>Game Result Checking</h3>
+            
+            <div class="code-block"><code>private String checkGameResult(String board) {
+    // Check 3 win patterns: rows, columns, diagonals
+    for (int i = 0; i < 3; i++) {
+        if (row_matches(i)) return "X_wins" or "O_wins";
+    }
+    if (!board.contains(".")) return "draw";
+    return "ongoing";
+}</code></div>
+            
+            <p>The board is a 9-character string:</p>
+            <div class="diagram">
+Index: 0 1 2
+       3 4 5
+       6 7 8
+
+Example: "X.O.X...." represents:
+       X . O
+       . X .
+       . . .
+            </div>
+            
+            <!-- ===== DATABASE MANAGER ===== -->
+            <h2>2.6 DatabaseManager - Persistent Storage Layer</h2>
+            
+            <p><strong>Purpose:</strong> SQLite connection management and schema initialization with connection pooling.</p>
+            
+            <h3>Database Schema</h3>
+            
+            <div class="code-block"><code>player_sessions
+├─ session_id (TEXT PRIMARY KEY)
+├─ player_name (TEXT)
+├─ connected_at, last_heartbeat (TIMESTAMP)
+├─ websocket_id (TEXT)
+├─ connection_status (TEXT: "connected", "disconnected")
+└─ retry_count (INTEGER)
+
+game_matches
+├─ match_id (TEXT PRIMARY KEY)
+├─ player1_session, player2_session (FK → player_sessions)
+├─ board (TEXT: ".........") 
+├─ current_turn (TEXT: "X" or "O")
+├─ status (TEXT: "waiting", "active", "finished")
+├─ result (TEXT: "X_wins", "O_wins", "draw", "ongoing")
+├─ created_at, updated_at, last_move_at (TIMESTAMP)
+└─ state_version (INTEGER) [for optimistic locking]
+
+game_moves
+├─ move_id (INTEGER PRIMARY KEY AUTOINCREMENT)
+├─ match_id, session_id (FKs)
+├─ cell_position (INTEGER: 0-8)
+├─ mark (TEXT: "X" or "O")
+├─ timestamp (TIMESTAMP)
+├─ state_version (INTEGER)
+└─ validated (BOOLEAN)
+
+pending_notifications
+├─ id (INTEGER PRIMARY KEY AUTOINCREMENT)
+├─ session_id (FK)
+├─ notification_type (TEXT)
+├─ data (TEXT: JSON)
+├─ created_at, next_retry (TIMESTAMP)
+├─ attempts, max_attempts (INTEGER)
+└─ delivered (BOOLEAN)
+
+connection_health
+├─ session_id (PRIMARY KEY)
+├─ last_ping, last_pong (TIMESTAMP)
+├─ ping_count, missed_pings (INTEGER)
+└─ connection_quality (DOUBLE: 0.0 to 1.0)</code></div>
+            
+            <h3>Connection Pooling Strategy</h3>
+            
+            <div class="code-block"><code>ConnectionPool (Singleton)
+├─ Maintains up to 10 pooled connections to SQLite
+├─ Reuses connections instead of creating new ones
+├─ Auto-closes idle connections after timeout
+└─ Prevents: "too many connections" errors
+
+Why Pooling?
+• Database connection creation is expensive (~10-50ms)
+• With 8 game threads + cleanup threads, need multiple connections
+• Without pooling: Threads would block waiting for connections</code></div>
+            
+            <div class="section-box">
+                <strong>💡 Connection Pool Analogy:</strong> Think of it like a car rental company. Instead of building a new car for each customer (connection creation), you maintain a fleet of 10 cars (pooled connections) that customers check out and return. Much faster!
+            </div>
+            
+            <!-- ===== WEBSOCKET NOTIFIER ===== -->
+            <h2>2.7 WebSocketNotifier - Message Distribution System</h2>
+            
+            <p><strong>Purpose:</strong> Manages WebSocket connections and implements reliable message delivery.</p>
+            
+            <h3>Key Operations</h3>
+            
+            <div class="code-block"><code>registerConnection(sessionId, connection)
+└─ Maps session → WebSocket, triggers retry of pending messages
+
+unregisterConnection(sessionId)
+└─ Removes mapping when client disconnects
+
+sendToSession(sessionId, message)
+├─ If connected? Send immediately
+├─ If disconnected? Store in pending_notifications table
+└─ Assume client will reconnect and receive messages
+
+storePendingNotification(sessionId, type, data)
+├─ INSERT INTO pending_notifications (...)
+└─ Sets next_retry = now + 5 seconds
+
+sendPendingMessages(sessionId)
+└─ Called when client reconnects
+    ├─ Query all undelivered notifications
+    ├─ Send in order
+    └─ Mark as delivered</code></div>
+            
+            <h3>Retry Logic with Exponential Backoff</h3>
+            
+            <div class="code-block"><code>startRetryTask() {
+    // Every 10 seconds, check pending notifications
+    retryScheduler.scheduleAtFixedRate(
+        this::retryPendingNotifications, 
+        10,    // Initial delay
+        10,    // Repeat interval
+        TimeUnit.SECONDS
+    );
+}
+
+retryPendingNotifications() {
+    for (Notification n : getAllPending()) {
+        if (n.nextRetry <= now()) {
+            if (sendToSession(n.sessionId, n.data)) {
+                mark_delivered(n.id);
+            } else {
+                n.attempts++;
+                if (n.attempts >= n.max_attempts) {
+                    discard_notification(n.id); // Give up after 3 tries
+                } else {
+                    // Exponential backoff: 5s, 10s, 20s...
+                    n.nextRetry = now() + (5 * 2^n.attempts);
+                }
+            }
+        }
+    }
+}</code></div>
+            
+            <p><strong>Why This Approach?</strong></p>
+            <ul>
+                <li><strong>Network Reliability:</strong> Internet connections are unreliable; messages can be lost</li>
+                <li><strong>Graceful Degradation:</strong> If client disconnects temporarily, they don't lose game updates</li>
+                <li><strong>Database Audit Trail:</strong> All notification attempts logged for debugging</li>
+            </ul>
+            
+            <div class="section-box">
+                <strong>Exponential Backoff Explanation:</strong> Start with short retry intervals, then increase. If server/client is down, no point hammering them every 5 seconds—wait longer each time.
+                <div class="code-block"><code>Attempt 1: Retry after 5 seconds (2^0 = 1 × 5)
+Attempt 2: Retry after 10 seconds (2^1 = 2 × 5)
+Attempt 3: Retry after 20 seconds (2^2 = 4 × 5)
+Attempt 4+: Give up (max_attempts = 3)</code></div>
+            </div>
+            
+        </div>
+        
+        <div class="footer">
+            <p>Tic-Tac-Toe Server Architecture Documentation | Part 2 of 5</p>
+            <p><a href="ARCHITECTURE_BREAKDOWN_Part1.html">← Part 1</a> | <a href="ARCHITECTURE_BREAKDOWN_Part3.html">Part 3 →</a></p>
+        </div>
+    </div>
+</body>
+</html>

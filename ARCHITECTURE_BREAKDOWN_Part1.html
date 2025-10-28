@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Server Architecture - Part 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 20px 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        p {
+            margin: 15px 0;
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .highlight-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .code-block code {
+            display: block;
+            white-space: pre;
+        }
+        
+        .diagram {
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+        
+        .nav-section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .nav-section h3 {
+            margin-top: 0;
+        }
+        
+        .nav-links {
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin: 8px 0;
+        }
+        
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+            color: #764ba2;
+        }
+        
+        .footer {
+            background: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid #ddd;
+            color: #777;
+            margin-top: 30px;
+        }
+        
+        .part-indicator {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .section-box {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Tic-Tac-Toe Server Architecture</h1>
+            <p>Senior Bachelor Level Technical Breakdown</p>
+            <div class="part-indicator">PART 1 - Overview & Core Components</div>
+        </div>
+        
+        <div class="content">
+            
+            <h2>Executive Summary</h2>
+            <p>This document provides a comprehensive analysis of a <strong>multithreaded, real-time Tic-Tac-Toe game server</strong> built with Java. The system demonstrates advanced software engineering principles including <strong>concurrent programming, distributed systems communication, caching strategies, and game state management</strong>.</p>
+            
+            <p>The architecture employs a <strong>dual-protocol approach</strong> (WebSocket + HTTP REST), <strong>in-memory caching with database persistence</strong>, and <strong>asynchronous message handling</strong> to support real-time multiplayer gameplay while maintaining game state consistency.</p>
+            
+            <div class="nav-section">
+                <h3>📑 Documentation Parts</h3>
+                <ul class="nav-links">
+                    <li><strong>Part 1 (Current)</strong> - Overview & Core Components</li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part2.html">Part 2</a> - Communication Flows & Threading</li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part3.html">Part 3</a> - Defold Integration & Performance</li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part4.html">Part 4</a> - Error Handling & Conclusion</li>
+                </ul>
+            </div>
+            
+            <!-- ===== SECTION 1: ARCHITECTURE OVERVIEW ===== -->
+            <h2>1. System Architecture Overview</h2>
+            
+            <h3>1.1 High-Level Architecture Diagram</h3>
+            
+            <div class="diagram">
+┌─────────────────────────────────────────────────────────────┐
+│                     Defold Game Client (Lua)                 │
+│                                                               │
+│  • Real-time rendering                                       │
+│  • User input handling                                       │
+│  • WebSocket client (net.client)                             │
+│  • HTTP REST client for game actions                         │
+└────────────────┬──────────────────────────────────┬──────────┘
+                 │                                  │
+      WebSocket (ws://localhost:8080)  HTTP REST (http://localhost:8081)
+      (Real-time notifications)        (Game actions & queries)
+                 │                                  │
+                 ▼                                  ▼
+┌──────────────────────────────────────────────────────────────┐
+│                   Java Server Layer                           │
+├──────────────────────────────────────────────────────────────┤
+│  ┌─────────────────────┐         ┌────────────────────────┐  │
+│  │  WebSocket Server   │         │  HTTP REST Server      │  │
+│  │ (Port 8080)         │         │  (Port 8081)           │  │
+│  │                     │         │                        │  │
+│  │ • onOpen()          │         │ • POST /api/join       │  │
+│  │ • onMessage()       │         │ • POST /api/move       │  │
+│  │ • onClose()         │         │ • GET /api/matches     │  │
+│  │ • onError()         │         │ • GET /health          │  │
+│  └─────────┬───────────┘         └────────┬───────────────┘  │
+│            │                              │                   │
+│            └──────────────┬───────────────┘                   │
+│                           │                                   │
+│                           ▼                                   │
+│         ┌─────────────────────────────────┐                  │
+│         │  GameService (Core Game Logic)  │                  │
+│         │                                 │                  │
+│         │ • joinGame()                    │                  │
+│         │ • makeMove()                    │                  │
+│         │ • getGameState()                │                  │
+│         │ • matchmaking logic             │                  │
+│         └────────┬────────────┬───────────┘                  │
+│                  │            │                              │
+│    ┌─────────────▼──┐   ┌────▼──────────────┐               │
+│    │ GameStateCache │   │ DatabaseManager   │               │
+│    │ (In-Memory)    │   │ (Persistent Layer)│               │
+│    │                │   │                   │               │
+│    │ • activeGames  │   │ • player_sessions │               │
+│    │ • activeSess.. │   │ • game_matches    │               │
+│    │                │   │ • game_moves      │               │
+│    │ ConcurrentHash │   │ • notifications   │               │
+│    │     Map        │   │                   │               │
+│    └────────────────┘   └───────┬───────────┘               │
+│                                 │                            │
+│                                 ▼                            │
+│                    ┌────────────────────────┐               │
+│                    │  SQLite Database       │               │
+│                    │ (database/ttt_game.db)│               │
+│                    └────────────────────────┘               │
+│                                                              │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │     WebSocketNotifier (Message Distribution)        │   │
+│  │                                                     │   │
+│  │ • registerConnection()                             │   │
+│  │ • sendToSession()                                  │   │
+│  │ • notifyMatchStart()                               │   │
+│  │ • storePendingNotification()                       │   │
+│  │ • Retry logic with exponential backoff             │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+            </div>
+            
+            <!-- ===== SECTION 2: CORE COMPONENTS ===== -->
+            <h2>2. Core Components & Their Responsibilities</h2>
+            
+            <h3>2.1 Main.java - Server Bootstrap & Initialization</h3>
+            
+            <p><strong>Purpose:</strong> Entry point that orchestrates server startup and graceful shutdown.</p>
+            
+            <div class="code-block"><code>Key Responsibilities:
+1. Initialize SQLite database with schema (DatabaseManager)
+2. Create in-memory game state cache (GameStateCache)
+3. Start WebSocket server on port 8080
+4. Start HTTP REST API server on port 8081
+5. Register shutdown hooks for clean termination</code></div>
+            
+            <p><strong>Why This Design:</strong></p>
+            <ul>
+                <li><strong>Singleton Pattern:</strong> DatabaseManager and GameStateCache use singleton pattern to ensure only one instance exists across the JVM, preventing race conditions and duplicate connections.</li>
+                <li><strong>Graceful Shutdown:</strong> Java's <code>Runtime.addShutdownHook()</code> ensures all resources are properly cleaned up when the server terminates (database connections closed, thread pools shut down, etc.).</li>
+            </ul>
+            
+            <div class="highlight-box">
+                <strong>Key Code Pattern:</strong>
+                <div class="code-block"><code>// Ensures exactly one database manager instance
+DatabaseManager dbManager = DatabaseManager.getInstance();
+dbManager.initializeDatabase();
+
+// Ensures exactly one game cache instance
+GameStateCache gameCache = GameStateCache.getInstance();</code></div>
+            </div>
+            
+            <h3>2.2 WebSocket Server (Server.java) - Real-Time Communication</h3>
+            
+            <p><strong>Purpose:</strong> Handles WebSocket connections for real-time game state updates and notifications.</p>
+            
+            <p><strong>Key Methods:</strong></p>
+            
+            <table>
+                <tr>
+                    <th>Method</th>
+                    <th>Purpose</th>
+                    <th>Why Used</th>
+                </tr>
+                <tr>
+                    <td><code>onOpen()</code></td>
+                    <td>Client connects</td>
+                    <td>Sends welcome message, initializes session</td>
+                </tr>
+                <tr>
+                    <td><code>onMessage()</code></td>
+                    <td>Receive client message</td>
+                    <td>Registers session ID, handles heartbeats</td>
+                </tr>
+                <tr>
+                    <td><code>onClose()</code></td>
+                    <td>Client disconnects</td>
+                    <td>Unregisters connection, tracks user status</td>
+                </tr>
+                <tr>
+                    <td><code>onError()</code></td>
+                    <td>Connection errors</td>
+                    <td>Logs errors, degrades connection quality</td>
+                </tr>
+            </table>
+            
+            <p><strong>Critical Architecture Decisions:</strong></p>
+            
+            <h4>1. WebSocketNotifier Singleton</h4>
+            <ul>
+                <li>Centralized message broker that manages all active connections</li>
+                <li>Maintains a <code>ConcurrentHashMap&lt;String, WebSocket&gt;</code> mapping sessions to connections</li>
+                <li>Decouples game logic from transport layer</li>
+            </ul>
+            
+            <h4>2. Session Registration Flow</h4>
+            
+            <div class="diagram">
+Client Connects → onOpen() sends "server_hello" 
+    ↓
+Client sends sessionId via JSON → onMessage() parses JSON
+    ↓
+WebSocketNotifier.registerConnection(sessionId, conn)
+    ↓
+Session remembered in memory for future messages
+            </div>
+            
+            <h4>3. Why Not Store Connections Directly?</h4>
+            <ul>
+                <li><strong>Separation of Concerns:</strong> Game logic shouldn't know about WebSocket implementation</li>
+                <li><strong>Flexibility:</strong> Could later support other transports (gRPC, plain TCP, etc.)</li>
+                <li><strong>Testability:</strong> Can mock the notifier without real WebSocket connections</li>
+            </ul>
+            
+            <h3>2.3 HTTP REST API Server (RestApiServer.java) - Game Actions</h3>
+            
+            <p><strong>Purpose:</strong> Provides synchronous REST endpoints for game actions (join, move, query state).</p>
+            
+            <p><strong>Endpoints Implemented:</strong></p>
+            
+            <div class="code-block"><code>POST /api/join
+├─ Purpose: Player joins matchmaking queue
+├─ Input: { sessionId, name }
+└─ Output: { success, matchId } or { success: false, error }
+
+POST /api/move
+├─ Purpose: Player makes a move on the board
+├─ Input: { sessionId, matchId, cellPosition }
+└─ Output: { success, gameState }
+
+GET /api/matches
+├─ Purpose: List available matches to join
+└─ Output: { matches: [{matchId, hostName}, ...] }
+
+POST /api/create-match
+├─ Purpose: Create a new game room for others to join
+├─ Input: { sessionId, playerName, matchName }
+└─ Output: { success, matchId }
+
+GET /health
+├─ Purpose: Health check for monitoring
+└─ Output: { status: "ok", message: "Server is running" }</code></div>
+            
+            <p><strong>Why HTTP REST + WebSocket:</strong></p>
+            <ul>
+                <li><strong>WebSocket for Notifications:</strong> Efficient, persistent connection for game state changes (board updates, opponent moves)</li>
+                <li><strong>HTTP for Commands:</strong> Natural for atomic operations (join game, make move), stateless, easier to debug</li>
+                <li><strong>CORS Headers:</strong> Enables browser-based clients to make cross-origin requests</li>
+            </ul>
+            
+            <div class="section-box">
+                <strong>💡 Key Insight:</strong> This dual-protocol approach is standard in modern gaming and real-time applications. Firebase uses it, as do multiplayer game platforms like Playfab and Gamesparks.
+            </div>
+            
+        </div>
+        
+        <div class="footer">
+            <p>Tic-Tac-Toe Server Architecture Documentation | Part 1 of 4</p>
+            <p><a href="ARCHITECTURE_BREAKDOWN_Part2.html">Continue to Part 2 →</a></p>
+        </div>
+    </div>
+</body>
+</html>

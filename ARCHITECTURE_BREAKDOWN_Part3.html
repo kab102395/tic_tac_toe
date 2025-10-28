@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe Server Architecture - Part 3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin: 30px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 20px 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        h4 {
+            color: #667eea;
+            margin: 15px 0 8px 0;
+            font-size: 1.1em;
+        }
+        
+        p {
+            margin: 15px 0;
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .highlight-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .code-block code {
+            display: block;
+            white-space: pre;
+        }
+        
+        .diagram {
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f5f5f5;
+        }
+        
+        .nav-section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .nav-section h3 {
+            margin-top: 0;
+        }
+        
+        .nav-links {
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin: 8px 0;
+        }
+        
+        .nav-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            text-decoration: underline;
+            color: #764ba2;
+        }
+        
+        .footer {
+            background: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid #ddd;
+            color: #777;
+            margin-top: 30px;
+        }
+        
+        .part-indicator {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 30px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .section-box {
+            background: #fff9e6;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Tic-Tac-Toe Server Architecture</h1>
+            <p>Senior Bachelor Level Technical Breakdown</p>
+            <div class="part-indicator">PART 3 - TttRoom, Communication Flows & Threading</div>
+        </div>
+        
+        <div class="content">
+            
+            <div class="nav-section">
+                <h3>📑 Documentation Parts</h3>
+                <ul class="nav-links">
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part1.html">← Part 1</a></li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part2.html">← Part 2</a></li>
+                    <li><strong>Part 3 (Current)</strong> - TttRoom, Communication Flows & Threading</li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part4.html">Part 4 →</a></li>
+                    <li><a href="ARCHITECTURE_BREAKDOWN_Part5.html">Part 5</a></li>
+                </ul>
+            </div>
+            
+            <!-- ===== TTTROOM & MATCHMAKER ===== -->
+            <h2>2.8 TttRoom & Matchmaker - Game Room Management</h2>
+            
+            <p><strong>Purpose:</strong> Manages active game rooms and routes messages to appropriate games.</p>
+            
+            <h3>TttRoom Design - Efficient Game State Representation</h3>
+            
+            <div class="code-block"><code>public class TttRoom {
+    private int xMask = 0;      // Bitmask of X positions
+    private int oMask = 0;      // Bitmask of O positions
+    private boolean xTurn = true; // Whose turn?
+    
+    // Example: X at positions 0,4,8; O at positions 1,2
+    // xMask = 0b100010001 (binary) = positions where X played
+    // oMask = 0b011000000 (binary) = positions where O played
+}</code></div>
+            
+            <h3>Why Bitmasks Instead of Strings?</h3>
+            
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Bitmask Approach</th>
+                    <th>String Approach</th>
+                </tr>
+                <tr>
+                    <td><strong>Performance</strong></td>
+                    <td>Integer AND/OR: 1 CPU cycle</td>
+                    <td>String manipulation: 100+ cycles</td>
+                </tr>
+                <tr>
+                    <td><strong>Memory</strong></td>
+                    <td>2 integers = 8 bytes</td>
+                    <td>String "....X.O.." = 36 bytes</td>
+                </tr>
+                <tr>
+                    <td><strong>Win Detection</strong></td>
+                    <td>Bitwise comparison: ultra-fast</td>
+                    <td>Character iteration: slower</td>
+                </tr>
+                <tr>
+                    <td><strong>Occupied Check</strong></td>
+                    <td><code>if ((xMask | oMask) & bit) != 0</code></td>
+                    <td>String search or array iteration</td>
+                </tr>
+            </table>
+            
+            <h3>Win Patterns Using Bitmasks</h3>
+            
+            <div class="code-block"><code>private static final int[] WINS = {
+    0b111000000,  // Row 1 (positions 0,1,2)
+    0b000111000,  // Row 2 (positions 3,4,5)
+    0b000000111,  // Row 3 (positions 6,7,8)
+    0b100100100,  // Col 1 (positions 0,3,6)
+    0b010010010,  // Col 2 (positions 1,4,7)
+    0b001001001,  // Col 3 (positions 2,5,8)
+    0b100010001,  // Diagonal \ (positions 0,4,8)
+    0b001010100   // Diagonal / (positions 2,4,6)
+};
+
+Win Detection:
+for (int winPattern : WINS) {
+    if ((xMask & winPattern) == winPattern) {
+        return "X_wins";  // X has all 3 in this pattern
+    }
+}</code></div>
+            
+            <div class="section-box">
+                <strong>Binary Visualization:</strong>
+                <div class="code-block"><code>Board positions:
+    0 1 2
+    3 4 5
+    6 7 8
+
+Row 1 win (0,1,2):
+    X X X       111000000 (binary) = 0xE0
+    . . .    →  000000000
+    . . .       000000000
+
+Bit 8 7 6 5 4 3 2 1 0
+    1 1 1 0 0 0 0 0 0 = positions 0,1,2</code></div>
+            </div>
+            
+            <h3>Move Validation</h3>
+            
+            <div class="code-block"><code>public void onMove(ClientSession s, int cell) {
+    sched.execute(() -> {
+        // 1. Check if correct player's turn
+        boolean isX = (s == p1);
+        if (xTurn != isX) return; // Invalid: not your turn
+        
+        // 2. Check if cell is empty
+        int bit = 1 << (8 - cell);
+        if (((xMask | oMask) & bit) != 0) return; // Invalid: occupied
+        
+        // 3. Make move
+        if (isX) xMask |= bit;    // Set X bit
+        else oMask |= bit;        // Set O bit
+        xTurn = !xTurn;           // Switch turns
+        
+        // 4. Check for end condition
+        String result = result();
+        if (!"ongoing".equals(result)) {
+            broadcastOver(result); // Game ends
+        } else {
+            broadcastState(result); // Continue playing
+        }
+    });
+}</code></div>
+            
+            <p><strong>Bitwise Operation Explanation:</strong></p>
+            <ul>
+                <li><code>1 << (8 - cell)</code> creates a bitmask with a single bit set at position (8-cell)</li>
+                <li><code>(xMask | oMask) & bit</code> checks if ANY player has played at this position</li>
+                <li><code>xMask |= bit</code> sets the bit for X's position (bitwise OR assignment)</li>
+            </ul>
+            
+            <h3>Forfeit Timer</h3>
+            
+            <div class="code-block"><code>private void scheduleTimer() {
+    // 120-second inactivity timeout
+    timer = sched.schedule(() -> {
+        String winner = xTurn ? "O" : "X"; // Whoever's turn it is forfeits
+        broadcastOver("forfeit:" + winner);
+    }, 120, TimeUnit.SECONDS);
+}
+
+Why 120 seconds?
+• Prevents games from hanging forever if a player's internet drops
+• Reasonable timeout for human player (not too aggressive)
+• Long enough to handle network hiccups</code></div>
+            
+            <h3>Matchmaker Pattern</h3>
+            
+            <div class="code-block"><code>public void requestJoin(ClientSession s, String game) {
+    ClientSession other = tttWait.poll(); // Try to get waiting player
+    
+    if (other == null) {
+        tttWait.add(s);  // You're first, wait
+        s.send({"t": "waiting"});
+    } else {
+        // Found opponent! Create room
+        String id = "M-" + UUID.randomUUID();
+        TttRoom room = new TttRoom(id, sched);
+        rooms.put(id, room);
+        room.addPlayer(other, 1);  // Existing player is X
+        room.addPlayer(s, 2);      // New player is O
+        room.start();
+    }
+}</code></div>
+            
+            <!-- ===== COMMUNICATION FLOWS ===== -->
+            <h2>3. Communication Flow: Request → Response</h2>
+            
+            <h3>3.1 Join Game Flow</h3>
+            
+            <div class="diagram">
+STEP 1: Client initiates join
+┌─────────────────────────┐
+│  Defold Game Client     │
+│  net.join(sessionId, name)
+│  Sends HTTP POST        │
+└────────────┬────────────┘
+             │ POST /api/join
+             │ {"sessionId": "uuid-123", "name": "Swift Gamer"}
+             ▼
+         ┌───────────────────┐
+         │ RestApiServer     │
+         │ POST /api/join    │
+         └────────┬──────────┘
+                  │
+                  ▼
+         ┌─────────────────────┐
+         │ GameService         │
+         │ .joinGame()         │
+         │ (async/executor)    │
+         └────────┬────────────┘
+                  │
+        LOBBY STATE CHECK
+                  │
+         ┌────────┴─────────┐
+         │                  │
+    [FIRST PLAYER]   [SECOND PLAYER]
+         │                  │
+    Acquire lobbyLock       │
+         │              Acquire lobbyLock
+         │                  │
+    waitingPlayerId=null → Sees waitingPlayerId set
+         │                  │
+    Set waitingPlayerId     │
+    Return "waiting"    Create matchId
+         │                  │
+         │              Clear waitingPlayerId
+         │              createGame() → GameStateCache
+         │              Return matchId
+         │
+    ┌─────┴──────────────────────────┐
+    │                                 │
+    ▼                                 ▼
+HTTP Response                    HTTP Response
+{"matchId": "waiting"}          {"matchId": "M-uuid-abc"}
+    │                                 │
+    ▼                                 ▼
+Client waits...              Client receives matchId
+                            
+STEP 2: Server notifies both players via WebSocket
+                            
+    GameService calls:
+    wsNotifier.notifyMatchStart(matchId)
+        │
+        ├─→ Query database for player1_session, player2_session
+        │
+        ├─→ Send Player 1:
+        │   {"t": "match_start",
+        │    "matchId": "M-uuid-abc",
+        │    "yourMark": "X",
+        │    "opponentMark": "O"}
+        │
+        └─→ Send Player 2:
+            {"t": "match_start",
+             "matchId": "M-uuid-abc",
+             "yourMark": "O",
+             "opponentMark": "X"}
+    
+Both clients receive match_start and update UI.
+            </div>
+            
+            <h3>3.2 Make Move Flow</h3>
+            
+            <div class="diagram">
+STEP 1: Player clicks board cell
+┌──────────────────────┐
+│ Defold Client        │
+│ ttt.gui_script       │
+│ on_input (mouse)     │
+│ cell_at(x, y)        │
+└────────┬─────────────┘
+         │
+         ▼
+    cell = 4 (center)
+         │
+         ├─ HTTP POST /api/move
+         │  {
+         │    "sessionId": "uuid-123",
+         │    "matchId": "M-uuid-abc",
+         │    "cellPosition": 4
+         │  }
+         │
+         ▼
+    ┌──────────────────┐
+    │ RestApiServer    │
+    │ /api/move POST   │
+    └────────┬─────────┘
+             │
+             ▼
+      ┌────────────────┐
+      │ GameService    │
+      │ .makeMove()    │
+      └────────┬───────┘
+               │
+      GAME STATE VALIDATION
+               │
+      ┌────────┴─────────────┐
+      │                      │
+    [VALID]            [INVALID]
+      │                      │
+  Move to cache         Return error
+  ├─ gameCache           ("already occupied",
+  │  .makeMove()         "not your turn", etc)
+  │
+  ▼
+gameCache updates in-memory state:
+├─ Update xMask or oMask
+├─ Switch currentPlayer
+├─ Check for win/draw
+│
+├─ If game continues:
+│   wsNotifier.notifyGameState()
+│   ├─ Send to Player 1: {"t": "game_state", 
+│   │                     "board": "....X....",
+│   │                     "current_turn": "O"}
+│   └─ Send to Player 2: same state
+│
+└─ If game ends:
+    ├─ gameCache.saveCompletedGameToDatabase()
+    │  └─ Writes to game_matches table
+    │
+    └─ wsNotifier.notifyGameState() with status="finished"
+       ├─ Send to both: {"t": "game_over",
+       │               "board": "X..XO.O..",
+       │               "result": "X_wins"}
+       └─ Save stats to player_sessions
+            </div>
+            
+            <h3>3.3 Handling Disconnection & Reconnection</h3>
+            
+            <div class="diagram">
+SCENARIO: Player's internet drops during game
+
+STEP 1: Disconnect Event
+Player loses connection
+  │
+  ▼
+WebSocket Server
+  ├─ onClose() fires
+  │  ├─ Find session by connection
+  │  └─ wsNotifier.unregisterConnection(sessionId)
+  │      └─ Remove from sessionConnections map
+  │      └─ Update DB: connection_status = 'disconnected'
+  │
+  └─ If in active game:
+     ├─ Check TttRoom.onLeave()
+     └─ Start 120-second forfeit timer
+
+STEP 2: Server tries to notify opponent
+WebSocketNotifier.sendToSession(sessionId, message)
+  ├─ Check: sessionConnections.get(sessionId)
+  │ └─ Returns null (disconnected)
+  │
+  └─ Call: storePendingNotification()
+     └─ INSERT INTO pending_notifications table
+        (session_id, notification_type, data, next_retry)
+
+STEP 3: Player reconnects
+Client reconnects WebSocket
+  │
+  ▼
+Server.onOpen() fires
+  ├─ Client sends new message with sessionId
+  │
+  ▼
+Server.onMessage() → registerConnection(sessionId, newConn)
+  │
+  ├─ Update sessionConnections[sessionId] = newConn
+  │
+  └─ wsNotifier.sendPendingMessages(sessionId)
+     ├─ Query: SELECT * FROM pending_notifications
+     │         WHERE session_id = ? AND delivered = FALSE
+     │
+     └─ For each notification:
+        ├─ Send via new WebSocket connection
+        └─ Mark as delivered
+        
+All missed updates are delivered!
+            </div>
+            
+            <!-- ===== THREADING ===== -->
+            <h2>4. Threading & Concurrency Model</h2>
+            
+            <h3>4.1 Thread Pool Architecture</h3>
+            
+            <div class="code-block"><code>Main Thread:
+└─ Starts all servers and thread pools
+
+WebSocket Server Thread (Netty):
+├─ Listens on port 8080
+├─ Calls onOpen/onMessage/onClose for each client
+└─ Delegates work to GameService thread pool
+
+GameService Thread Pool (ExecutorService):
+├─ Fixed pool of 8 worker threads
+├─ Each joinGame() runs in a separate thread
+├─ Each makeMove() runs in a separate thread
+└─ Prevents blocking the WebSocket thread
+
+DatabaseManager Thread Pool:
+├─ ScheduledExecutorService for cleanup tasks
+├─ Runs connection pool cleanup every 5 minutes
+└─ Runs pending notification retry every 10 seconds
+
+WebSocketNotifier Thread Pools:
+├─ Retry scheduler: Retries failed messages
+└─ Heartbeat scheduler: Sends ping/pong every 30 seconds
+
+TttRoom Thread Pool:
+├─ Timers for 120-second move timeout per room
+└─ Executes onMove() in separate thread</code></div>
+            
+            <h3>4.2 Concurrency Challenges & Solutions</h3>
+            
+            <table>
+                <tr>
+                    <th>Challenge</th>
+                    <th>Problem</th>
+                    <th>Solution</th>
+                    <th>Code</th>
+                </tr>
+                <tr>
+                    <td><strong>Lobby Race</strong></td>
+                    <td>Two players call joinGame() simultaneously; both see empty lobby</td>
+                    <td><code>synchronized (lobbyLock)</code></td>
+                    <td>sync block in GameService.joinGame()</td>
+                </tr>
+                <tr>
+                    <td><strong>Game State Mutations</strong></td>
+                    <td>Multiple threads accessing game board</td>
+                    <td><code>ConcurrentHashMap</code></td>
+                    <td>GameStateCache uses ConcurrentHashMap</td>
+                </tr>
+                <tr>
+                    <td><strong>DB Connection Exhaustion</strong></td>
+                    <td>Too many threads opening connections</td>
+                    <td>Connection pooling</td>
+                    <td>ConnectionPool maintains max 10 connections</td>
+                </tr>
+                <tr>
+                    <td><strong>Message Ordering</strong></td>
+                    <td>Messages arrive out of order</td>
+                    <td>Timestamping, state versioning</td>
+                    <td>state_version field in game_moves table</td>
+                </tr>
+                <tr>
+                    <td><strong>Notification Overflow</strong></td>
+                    <td>Messages accumulate for disconnected clients</td>
+                    <td>Max 3 retry attempts, exponential backoff</td>
+                    <td>pending_notifications with attempts/max_attempts</td>
+                </tr>
+            </table>
+            
+            <h3>4.3 CompletableFuture Usage</h3>
+            
+            <div class="code-block"><code>public CompletableFuture<String> joinGame(String sessionId, String playerName) {
+    return CompletableFuture.supplyAsync(() -> {
+        // This code runs in GameService thread pool
+        synchronized (lobbyLock) {
+            // ... game logic ...
+            return matchId; // Completes the Future
+        }
+    }, gameThreadPool);
+}
+
+// Called from HTTP request handler:
+String matchId = gameService.joinGame(sessionId, playerName).get();</code></div>
+            
+            <p><strong>Why CompletableFuture?</strong></p>
+            <ul>
+                <li><strong>Non-blocking REST API:</strong> HTTP request doesn't block entire WebSocket server</li>
+                <li><strong>Clean Async Code:</strong> Chains operations with <code>.thenApply()</code>, <code>.exceptionally()</code>, etc.</li>
+                <li><strong>Timeout Safety:</strong> Can set timeout with <code>.get(timeout, unit)</code></li>
+            </ul>
+            
+        </div>
+        
+        <div class="footer">
+            <p>Tic-Tac-Toe Server Architecture Documentation | Part 3 of 5</p>
+            <p><a href="ARCHITECTURE_BREAKDOWN_Part2.html">← Part 2</a> | <a href="ARCHITECTURE_BREAKDOWN_Part4.html">Part 4 →</a></p>
+        </div>
+    </div>
+</body>
+</html>
