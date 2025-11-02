@@ -5,6 +5,7 @@ public abstract class Room {
   protected final String id;
   protected final ScheduledExecutorService sched;
   protected Room(String id, ScheduledExecutorService s){ this.id=id; this.sched=s; }
+  public abstract void addPlayer(ClientSession s, int seat);
   public abstract void start();
   public abstract void onMove(ClientSession s, int cell);
   public abstract void onLeave(ClientSession s);

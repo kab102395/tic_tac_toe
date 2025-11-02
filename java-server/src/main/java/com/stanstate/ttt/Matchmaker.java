@@ -5,10 +5,14 @@ import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 public class Matchmaker {
-  private final ScheduledExecutorService sched;
   private final ConcurrentLinkedQueue<ClientSession> tttWait = new ConcurrentLinkedQueue<>();
   private final Map<String, Room> rooms = new ConcurrentHashMap<>();
-  public Matchmaker(ScheduledExecutorService s){ this.sched=s; }
+  private final RoomFactory roomFactory;
+  
+  public Matchmaker(ScheduledExecutorService s){ 
+    this.roomFactory = new RoomFactory(s);
+  }
+  
   public void requestJoin(ClientSession s, String game){
     if (!"ttt".equals(game)) {
       var err = new JsonObject(); err.addProperty("t","error"); err.addProperty("code","UNSUPPORTED_GAME"); err.addProperty("msg","Only 'ttt'");
@@ -20,7 +24,7 @@ public class Matchmaker {
       var waiting = new JsonObject(); waiting.addProperty("t","waiting"); s.send(waiting);
     } else {
       String id = "M-" + UUID.randomUUID();
-      TttRoom room = new TttRoom(id, sched);
+      Room room = roomFactory.createRoom(GameType.TICTACTOE, id);
       rooms.put(id, room);
       room.addPlayer(other,1);
       room.addPlayer(s,2);
