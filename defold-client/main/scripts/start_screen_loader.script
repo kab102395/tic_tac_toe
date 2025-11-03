@@ -1,15 +1,18 @@
 -- Start screen loader script
--- Loads the start_screen collection and manages transitions
+-- Loads the start_screen collection via proxy
 
 function init(self)
-    print("[StartScreenLoader] Initializing - start screen ready")
+    print("[StartScreenLoader] Initializing - loading start screen collection")
+    msg.post("#proxy", "enable")
+    print("[StartScreenLoader] Start screen collection loaded")
 end
 
 function on_message(self, message_id, message, sender)
     if message_id == hash("launch_game") then
         print("[StartScreenLoader] Received launch_game - game_type: " .. message.game_type)
         
-        -- Forward the message to the game_manager so it can load the appropriate game
+        -- Unload start screen and forward to game_manager
+        msg.post("#proxy", "disable")
         msg.post("#game_manager", message_id, message)
     end
 end
