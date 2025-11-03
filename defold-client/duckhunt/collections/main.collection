@@ -1,4 +1,4 @@
-name: "duckhunt_game"
+name: "main"
 instances {
   id: "loader"
   prototype: "/duckhunt/gameobjects/loader.go"
@@ -8,3 +8,4 @@ instances {
   prototype: "/duckhunt/gameobjects/proxy_relay.go"
 }
 scale_along_z: 0
+

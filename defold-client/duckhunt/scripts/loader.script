@@ -1,0 +1,44 @@
+function init(self)
+	print("Loader script running")
+
+	-- Get the proxy component URL
+	local proxy_url = msg.url(nil, "loader", "game_proxy")
+
+	-- Load the proxy collection
+	msg.post(proxy_url, "load")
+
+	-- Do NOT release input focus yet — proxy isn't ready
+end
+
+function on_message(self, message_id, message, sender)
+	local proxy_url = msg.url(nil, "loader", "game_proxy")
+
+	if message_id == hash("proxy_loaded") then
+		print("Proxy loaded — enabling")
+
+		-- Enable the proxy and claim input focus for the proxy holder
+		msg.post(sender, "enable")
+		msg.post(sender, "acquire_input_focus")
+
+		-- ✅ Do NOT try to message into the proxy directly
+		-- The controller will request the loader URL via proxy_relay
+
+	elseif message_id == hash("restart") then
+		print("Restart requested — unloading proxy")
+
+		-- Disable and unload the proxy
+		msg.post(proxy_url, "disable")
+		msg.post(proxy_url, "unload")
+
+		-- Reload the proxy after a short delay
+		timer.delay(0.1, false, function()
+			print("Reloading proxy")
+			msg.post(proxy_url, "load")
+		end)
+
+	elseif message_id == hash("request_loader_url") then
+		print("Received loader URL request from controller")
+		local loader_url = msg.url()
+		msg.post(sender, "set_loader_url", { loader = loader_url })
+	end
+end
