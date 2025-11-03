@@ -269,6 +269,30 @@ public class RestApiServer {
                 return gson.toJson(errorResponse);
             }
         });
+        
+        // NEW: Get player info by session ID endpoint (for Defold start screen)
+        Spark.get("/api/player/:sessionId", (request, response) -> {
+            response.type("application/json");
+            
+            try {
+                String sessionId = request.params(":sessionId");
+                System.out.println("=== PLAYER INFO REQUEST ===");
+                System.out.println("Session: " + sessionId);
+                
+                JsonObject playerInfo = gameService.getPlayerInfoBySession(sessionId).get();
+                System.out.println("Player info response: " + playerInfo);
+                
+                return gson.toJson(playerInfo);
+            } catch (Exception e) {
+                System.out.println("PLAYER INFO ERROR: " + e.getMessage());
+                e.printStackTrace();
+                JsonObject errorResponse = new JsonObject();
+                errorResponse.addProperty("success", false);
+                errorResponse.addProperty("error", e.getMessage());
+                response.status(500);
+                return gson.toJson(errorResponse);
+            }
+        });
 
         // Health check
         Spark.get("/api/health", (req, res) -> {

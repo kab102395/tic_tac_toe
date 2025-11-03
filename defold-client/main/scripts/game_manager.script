@@ -1,0 +1,42 @@
+-- Game manager script
+-- Routes between games and manages proxy loading/unloading
+
+function init(self)
+    print("[GameManager] Initializing")
+    self.current_game = nil
+    self.session_id = nil
+    self.player_name = nil
+end
+
+function on_message(self, message_id, message, sender)
+    if message_id == hash("launch_game") then
+        print("[GameManager] Launch game request - type: " .. message.game_type)
+        
+        -- Store player info for the game
+        self.session_id = message.session_id
+        self.player_name = message.player_name
+        
+        -- Unload previous game if running
+        if self.current_game then
+            print("[GameManager] Unloading previous game: " .. self.current_game)
+            msg.post("#" .. self.current_game .. "_proxy", "unload")
+        end
+        
+        -- Load the new game
+        self.current_game = message.game_type
+        
+        if message.game_type == "tictactoe" then
+            print("[GameManager] Loading Tic Tac Toe")
+            msg.post("#ttt_proxy", "load")
+            msg.post("#ttt_proxy", "enable")
+            
+        elseif message.game_type == "duckhunt" then
+            print("[GameManager] Loading Duck Hunt")
+            msg.post("#duckhunt_proxy", "load")
+            msg.post("#duckhunt_proxy", "enable")
+        end
+        
+        -- Disable start screen
+        msg.post("/start_screen#loader", "disable")
+    end
+end

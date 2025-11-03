@@ -89,10 +89,11 @@ public class DatabaseManager {
             )
         """);
         
-        // Enhanced game matches table with state tracking
+        // Enhanced game matches table with state tracking and game type
         conn.createStatement().execute("""
             CREATE TABLE IF NOT EXISTS game_matches (
                 match_id TEXT PRIMARY KEY,
+                game_type TEXT DEFAULT 'tictactoe',
                 player1_session TEXT,
                 player2_session TEXT,
                 board TEXT DEFAULT '.........',
@@ -164,17 +165,20 @@ public class DatabaseManager {
             )
         """);
         
-        // Player statistics table for tracking wins/losses/draws
+        // Player statistics table for tracking wins/losses/draws per game type
         conn.createStatement().execute("""
             CREATE TABLE IF NOT EXISTS player_stats (
-                player_name TEXT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_name TEXT NOT NULL,
+                game_type TEXT NOT NULL,
                 total_games INTEGER DEFAULT 0,
                 wins INTEGER DEFAULT 0,
                 losses INTEGER DEFAULT 0,
                 draws INTEGER DEFAULT 0,
                 win_rate REAL DEFAULT 0.0,
                 last_game TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_name, game_type)
             )
         """);
         
@@ -185,8 +189,8 @@ public class DatabaseManager {
         """);
         
         // Set database version
-        conn.createStatement().execute("INSERT INTO schema_version (version) VALUES (3)");
-        System.out.println("Fresh database created with version 3");
+        conn.createStatement().execute("INSERT INTO schema_version (version) VALUES (4)");
+        System.out.println("Fresh database created with version 4");
     }
     
     private void migrateDatabase(Connection conn, int currentVersion) throws SQLException {
@@ -263,14 +267,17 @@ public class DatabaseManager {
             try {
                 conn.createStatement().execute("""
                     CREATE TABLE IF NOT EXISTS player_stats (
-                        player_name TEXT PRIMARY KEY,
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        player_name TEXT NOT NULL,
+                        game_type TEXT NOT NULL,
                         total_games INTEGER DEFAULT 0,
                         wins INTEGER DEFAULT 0,
                         losses INTEGER DEFAULT 0,
                         draws INTEGER DEFAULT 0,
                         win_rate REAL DEFAULT 0.0,
                         last_game TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(player_name, game_type)
                     )
                 """);
                 System.out.println("Player statistics table created successfully");
@@ -279,10 +286,23 @@ public class DatabaseManager {
             }
         }
         
-        // Update version to 3
+        if (currentVersion < 4) {
+            // Add game_type column to game_matches for version 4
+            System.out.println("Adding game_type column to game_matches for version 4...");
+            
+            try {
+                conn.createStatement().execute("ALTER TABLE game_matches ADD COLUMN game_type TEXT DEFAULT 'tictactoe'");
+                System.out.println("Added game_type to game_matches");
+            } catch (SQLException e) {
+                // Column might already exist
+                System.out.println("game_type column likely already exists in game_matches");
+            }
+        }
+        
+        // Update version to 4
         try {
-            conn.createStatement().execute("INSERT INTO schema_version (version) VALUES (3)");
-            System.out.println("Database migrated to version 3");
+            conn.createStatement().execute("INSERT INTO schema_version (version) VALUES (4)");
+            System.out.println("Database migrated to version 4");
         } catch (SQLException e) {
             System.err.println("Failed to update schema version: " + e.getMessage());
         }

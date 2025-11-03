@@ -1,0 +1,174 @@
+script: "/main/scripts/start_screen.gui_script"
+fonts {
+  name: "tile"
+  font: "/builtins/fonts/default.font"
+}
+nodes {
+  position {
+    x: 640.0
+    y: 100.0
+  }
+  id: "title"
+  layer: "tile"
+  clipping_inverted: false
+  clipping_mode: CLIPPING_MODE_NONE
+  size {
+    x: 200.0
+    y: 80.0
+  }
+  color {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  type: TYPE_TEXT
+  blend_mode: BLEND_MODE_ALPHA
+  text: "GAME SELECTOR"
+  font: "tile"
+  valign: VERTICAL_ALIGN_CENTER
+  halign: HORIZONTAL_ALIGN_CENTER
+}
+nodes {
+  position {
+    x: 640.0
+    y: 300.0
+  }
+  id: "player_name_label"
+  layer: "tile"
+  clipping_inverted: false
+  clipping_mode: CLIPPING_MODE_NONE
+  size {
+    x: 300.0
+    y: 40.0
+  }
+  color {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  type: TYPE_TEXT
+  blend_mode: BLEND_MODE_ALPHA
+  text: "Player: Loading..."
+  font: "tile"
+  valign: VERTICAL_ALIGN_CENTER
+  halign: HORIZONTAL_ALIGN_CENTER
+}
+nodes {
+  position {
+    x: 400.0
+    y: 500.0
+  }
+  id: "ttt_button"
+  layer: "tile"
+  clipping_inverted: false
+  clipping_mode: CLIPPING_MODE_NONE
+  size {
+    x: 200.0
+    y: 60.0
+  }
+  color {
+    x: 0.5
+    y: 0.5
+    z: 1.0
+  }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+}
+nodes {
+  position {
+    x: 400.0
+    y: 500.0
+  }
+  id: "ttt_button_text"
+  layer: "tile"
+  clipping_inverted: false
+  clipping_mode: CLIPPING_MODE_NONE
+  size {
+    x: 200.0
+    y: 60.0
+  }
+  color {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  type: TYPE_TEXT
+  blend_mode: BLEND_MODE_ALPHA
+  text: "Tic Tac Toe\n(Press 1)"
+  font: "tile"
+  valign: VERTICAL_ALIGN_CENTER
+  halign: HORIZONTAL_ALIGN_CENTER
+}
+nodes {
+  position {
+    x: 880.0
+    y: 500.0
+  }
+  id: "duckhunt_button"
+  layer: "tile"
+  clipping_inverted: false
+  clipping_mode: CLIPPING_MODE_NONE
+  size {
+    x: 200.0
+    y: 60.0
+  }
+  color {
+    x: 1.0
+    y: 0.5
+    z: 0.5
+  }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+}
+nodes {
+  position {
+    x: 880.0
+    y: 500.0
+  }
+  id: "duckhunt_button_text"
+  layer: "tile"
+  clipping_inverted: false
+  clipping_mode: CLIPPING_MODE_NONE
+  size {
+    x: 200.0
+    y: 60.0
+  }
+  color {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  type: TYPE_TEXT
+  blend_mode: BLEND_MODE_ALPHA
+  text: "Duck Hunt\n(Press 2)"
+  font: "tile"
+  valign: VERTICAL_ALIGN_CENTER
+  halign: HORIZONTAL_ALIGN_CENTER
+}
+nodes {
+  position {
+    x: 640.0
+    y: 200.0
+  }
+  id: "status_text"
+  layer: "tile"
+  clipping_inverted: false
+  clipping_mode: CLIPPING_MODE_NONE
+  size {
+    x: 400.0
+    y: 40.0
+  }
+  color {
+    x: 0.8
+    y: 0.8
+    z: 0.8
+  }
+  type: TYPE_TEXT
+  blend_mode: BLEND_MODE_ALPHA
+  text: "Select a game or press 1/2"
+  font: "tile"
+  valign: VERTICAL_ALIGN_CENTER
+  halign: HORIZONTAL_ALIGN_CENTER
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_LEGACY

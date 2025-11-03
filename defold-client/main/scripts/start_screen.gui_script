@@ -1,0 +1,81 @@
+-- Start screen GUI script
+-- Handles game selection buttons and player name display
+
+go.property("server_url", "http://localhost:8081")
+
+function init(self)
+    print("[StartScreen] GUI initialized")
+    
+    -- Try to get session ID from storage
+    local session_id = sys.get_config("game.session_id")
+    if not session_id or session_id == "" then
+        session_id = "defold-" .. tostring(socket.gettime() * 1000)
+        sys.set_config("game.session_id", session_id)
+        print("[StartScreen] Created new session ID: " .. session_id)
+    else
+        print("[StartScreen] Using existing session ID: " .. session_id)
+    end
+    
+    self.session_id = session_id
+    self.player_name = "Unknown"
+    
+    -- Try to fetch player info from server
+    self:fetch_player_info()
+end
+
+function fetch_player_info(self)
+    print("[StartScreen] Fetching player info for session: " .. self.session_id)
+    
+    local url = self.server_url .. "/api/player/" .. self.session_id
+    
+    http.request(url, "GET", function(self, id, response)
+        if response.status == 200 then
+            local data = json.decode(response.response)
+            if data.found then
+                self.player_name = data.playerName or "Unknown"
+                print("[StartScreen] Found existing player: " .. self.player_name)
+            else
+                self.player_name = "New Player"
+                print("[StartScreen] No existing player found - first time")
+            end
+        else
+            print("[StartScreen] Failed to fetch player info: " .. response.status)
+            self.player_name = "New Player"
+        end
+        
+        -- Update GUI with player name
+        gui.set_text("#player_name_label", "Player: " .. self.player_name)
+    end)
+end
+
+function on_input(self, action_id, action)
+    if action_id == hash("key_1") and action.pressed then
+        print("[StartScreen] Key 1 pressed - launching Tic Tac Toe")
+        gui.set_text("#status_text", "Launching Tic Tac Toe...")
+        
+        -- Send message to parent to launch TTT
+        msg.post("#", "launch_game", {
+            game_type = "tictactoe",
+            session_id = self.session_id,
+            player_name = self.player_name
+        })
+        
+    elseif action_id == hash("key_2") and action.pressed then
+        print("[StartScreen] Key 2 pressed - launching Duck Hunt")
+        gui.set_text("#status_text", "Launching Duck Hunt...")
+        
+        -- Send message to parent to launch Duck Hunt
+        msg.post("#", "launch_game", {
+            game_type = "duckhunt",
+            session_id = self.session_id,
+            player_name = self.player_name
+        })
+    end
+end
+
+function on_message(self, message_id, message, sender)
+    if message_id == hash("launch_game") then
+        print("[StartScreen] Received launch_game message for: " .. message.game_type)
+        -- This will be handled by parent (game_manager)
+    end
+end

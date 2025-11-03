@@ -514,4 +514,53 @@ public class GameService {
             return response;
         }, gameThreadPool);
     }
+    
+    /**
+     * Get player information by session ID.
+     * Used by Defold start screen to retrieve player name when returning to game.
+     * @param sessionId The player's session ID
+     * @return JsonObject with player info or error
+     */
+    public CompletableFuture<JsonObject> getPlayerInfoBySession(String sessionId) {
+        return CompletableFuture.supplyAsync(() -> {
+            JsonObject response = new JsonObject();
+            response.addProperty("success", true);
+            
+            try {
+                System.out.println("=== GET PLAYER INFO BY SESSION ===");
+                System.out.println("Session: " + sessionId);
+                
+                try (Connection conn = dbManager.getConnection()) {
+                    PreparedStatement stmt = conn.prepareStatement(
+                        "SELECT session_id, player_name, connected_at FROM player_sessions WHERE session_id = ?"
+                    );
+                    stmt.setString(1, sessionId);
+                    ResultSet rs = stmt.executeQuery();
+                    
+                    if (rs.next()) {
+                        // Session found - return player info
+                        response.addProperty("found", true);
+                        response.addProperty("sessionId", rs.getString("session_id"));
+                        response.addProperty("playerName", rs.getString("player_name"));
+                        response.addProperty("connectedAt", rs.getString("connected_at"));
+                        
+                        System.out.println("Found session: " + sessionId + " for player: " + rs.getString("player_name"));
+                    } else {
+                        // Session not found - likely first time
+                        response.addProperty("found", false);
+                        response.addProperty("message", "Session not found - first time or session expired");
+                        
+                        System.out.println("No session found for: " + sessionId);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error getting player info by session: " + e.getMessage());
+                e.printStackTrace();
+                response.addProperty("success", false);
+                response.addProperty("error", e.getMessage());
+            }
+            
+            return response;
+        }, gameThreadPool);
+    }
 }
