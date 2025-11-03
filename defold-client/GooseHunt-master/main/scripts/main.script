@@ -1,0 +1,158 @@
+local SCREEN_WIDTH = 960
+local SCREEN_HEIGHT = 640
+
+-- Local goose spawner
+local function spawn_geese(self)
+	if self.game_over then return end
+
+	self.goose_ids = {}
+	self.active_geese = self.goose_count
+	self.bullets = self.goose_count
+
+	for i = 1, self.goose_count do
+		local x = math.random(80, SCREEN_WIDTH - 80)
+		local y = math.random(60, SCREEN_HEIGHT / 2)
+		local id = factory.create("#goose_factory", vmath.vector3(x, y, 0), vmath.quat(), { score = self.score })
+		table.insert(self.goose_ids, id)
+	end
+
+	msg.post("hud#gui", "update_bullets", { bullets = self.bullets })
+end
+
+local function remove_goose(self, id)
+	for i, goose_id in ipairs(self.goose_ids) do
+		if goose_id == id then
+			table.remove(self.goose_ids, i)
+			break
+		end
+	end
+end
+
+function init(self)
+	print("Game restarted - init() triggered")
+	self.game_over = false
+	self.guy_ready = false
+
+	msg.post(".", "acquire_input_focus")
+	msg.post("hud#gui", "acquire_input_focus")
+	msg.post("hud#gui", "reset")
+
+	self.score = 0
+	self.goose_count = 1
+	self.goose_ids = {}
+	self.active_geese = 0
+	self.missed_geese = 0
+	self.max_misses = 5
+	self.bullets = self.goose_count
+
+	spawn_geese(self)
+
+	timer.delay(0.1, false, function()
+		msg.post("hud#gui", "update_score", { score = self.score })
+		msg.post("hud#gui", "update_bullets", { bullets = self.bullets })
+	end)
+
+	timer.delay(0.3, false, function()
+		msg.post("main:/proxy_relay#script", "request_loader_url")
+	end)
+end
+
+function on_input(self, action_id, action)
+	if self.game_over or not self.guy_ready then
+		print("Input blocked — game over or guy not ready")
+		return
+	end
+
+	if action_id == hash("shoot") and action.pressed then
+		print("Shoot triggered at", action.x, action.y)
+
+		if self.bullets > 0 then
+			self.bullets = self.bullets - 1
+			msg.post("hud#gui", "update_bullets", { bullets = self.bullets })
+			msg.post("guy#script", "throw")
+
+			local guy_pos = go.get_position("guy")
+			local projectile_id = factory.create("guy#projectile_factory", guy_pos)
+			msg.post(projectile_id, "launch", { x = action.x, y = action.y })
+
+			-- Explosion on click
+			local explosion_pos = vmath.vector3(action.x, action.y, 1)
+			factory.create("#explosion_factory", explosion_pos)
+
+			for i = #self.goose_ids, 1, -1 do
+				local id = self.goose_ids[i]
+				local ok, pos = pcall(go.get_position, id)
+
+				if ok and pos then
+					msg.post(id, "shoot_attempt", { x = action.x, y = action.y })
+				else
+					print("Removing dead goose:", id)
+					table.remove(self.goose_ids, i)
+				end
+			end
+		else
+			print("Out of bullets!")
+		end
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("goose_hit_confirmed") then
+		self.score = self.score + 500
+		print("Goose hit! Score:", self.score)
+
+		self.goose_count = math.min(1 + math.floor(self.score / 2000), 100)
+
+		timer.delay(0.1, false, function()
+			msg.post("hud#gui", "update_score", { score = self.score })
+		end)
+
+	elseif message_id == hash("goose_escaped") then
+		remove_goose(self, sender)
+		self.active_geese = self.active_geese - 1
+		self.missed_geese = self.missed_geese + 1
+		print("Goose missed! Total missed:", self.missed_geese)
+		msg.post("hud#gui", "update_missed", { missed = self.missed_geese })
+
+		if self.missed_geese >= self.max_misses then
+			self.game_over = true
+			msg.post("hud#gui", "game_over", {
+				score = self.score,
+				missed = self.missed_geese,
+				total = self.score / 500 + self.missed_geese,
+				accuracy = math.floor((self.score / 500) / (self.score / 500 + self.missed_geese) * 100)
+			})
+			return
+		end
+
+		if self.active_geese <= 0 then
+			spawn_geese(self)
+		end
+
+	elseif message_id == hash("goose_fell_done") then
+		remove_goose(self, sender)
+		self.active_geese = self.active_geese - 1
+		print("Goose hit and fell. Remaining:", self.active_geese)
+
+		if self.active_geese <= 0 then
+			spawn_geese(self)
+		end
+
+	elseif message_id == hash("set_loader_url") then
+		self.loader_url = message.loader
+		print("Stored loader URL:", self.loader_url)
+
+	elseif message_id == hash("restart") then
+		self.game_over = false
+		if self.loader_url then
+			print("Relaying restart to loader")
+			msg.post(self.loader_url, "restart")
+		else
+			print("Loader URL not set — cannot restart")
+		end
+
+	elseif message_id == hash("guy_ready") then
+		self.guy_ready = true
+		print("Guy is ready — input unlocked")
+	end
+end

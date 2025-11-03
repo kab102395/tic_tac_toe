@@ -1,0 +1,10 @@
+function on_message(self, message_id, message, sender)
+	if message_id == hash("restart") then
+		print("Relay received restart — forwarding to loader")
+		msg.post("loader#loader", "restart")
+	elseif message_id == hash("request_loader_url") then
+		print("Relay received loader URL request — sending back")
+		local loader_url = msg.url("main:/loader#loader")
+		msg.post(sender, "set_loader_url", { loader = loader_url })
+	end
+end
