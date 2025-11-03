@@ -8,3 +8,11 @@ instances {
   id: "game_manager"
   prototype: "/main/gameobjects/game_manager.go"
 }
+instances {
+  id: "ttt_proxy"
+  prototype: "/main/gameobjects/proxy_ttt.go"
+}
+instances {
+  id: "duckhunt_proxy"
+  prototype: "/main/gameobjects/proxy_duckhunt.go"
+}
