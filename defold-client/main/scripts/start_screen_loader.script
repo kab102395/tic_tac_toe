@@ -2,19 +2,12 @@
 -- Loads the start_screen collection and manages transitions
 
 function init(self)
-    print("[StartScreenLoader] Initializing - loading start_screen collection")
-    
-    -- Load the start screen collection
-    collectionfactory.create("#factory", nil, {scale = 1})
+    print("[StartScreenLoader] Initializing - start screen ready")
 end
 
 function on_message(self, message_id, message, sender)
     if message_id == hash("launch_game") then
         print("[StartScreenLoader] Received launch_game - game_type: " .. message.game_type)
-        
-        -- Unload start screen collection
-        print("[StartScreenLoader] Unloading start_screen collection")
-        collectionfactory.unload("#factory")
         
         -- Forward the message to the game_manager so it can load the appropriate game
         msg.post("#game_manager", message_id, message)

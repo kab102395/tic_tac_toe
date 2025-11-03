@@ -1,4 +1,5 @@
-components {
+embedded_components {
   id: "proxy"
-  component: "/duckhunt/duckhunt_proxy.proxy"
+  type: "collectionproxy"
+  data: "collection: \"/duckhunt/duckhunt_game.collection\"\n"
 }
