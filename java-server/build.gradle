@@ -14,3 +14,14 @@ dependencies {
 }
 application { mainClass = 'com.stanstate.ttt.Main' }
 tasks.withType(JavaCompile) { options.release = 17 }
+
+// Create fat jar task
+task fatJar(type: Jar) {
+    archiveFileName = 'ttt-server-1.0.0-fat.jar'
+    duplicatesStrategy = 'exclude'
+    manifest {
+        attributes 'Main-Class': 'com.stanstate.ttt.Main'
+    }
+    from sourceSets.main.output
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+}
