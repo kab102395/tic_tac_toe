@@ -3,7 +3,7 @@ title = TTT Multiplayer (A2)
 dependencies#0 = https://github.com/defold/extension-websocket/archive/refs/heads/master.zip
 
 [bootstrap]
-main_collection = /main/main.collectionc
+main_collection = /main/launcher.collectionc
 
 [render]
 render = /builtins/render/default.render

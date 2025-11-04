@@ -1,9 +1,5 @@
-name: "main"
+name: "launcher"
 scale_along_z: 0
-instances {
-  id: "ttt"
-  prototype: "/ttt/ttt.go"
-}
 instances {
   id: "launcher"
   prototype: "/main/launcher.go"

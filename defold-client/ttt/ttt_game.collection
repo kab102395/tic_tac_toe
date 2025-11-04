@@ -1,0 +1,6 @@
+name: "ttt_game"
+scale_along_z: 0
+instances {
+  id: "ttt"
+  prototype: "/ttt/ttt.go"
+}

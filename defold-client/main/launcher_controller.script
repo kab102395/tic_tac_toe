@@ -1,0 +1,31 @@
+function init(self)
+    print("[launcher_controller] Init")
+    msg.post(".", "acquire_input_focus")
+    print("[launcher_controller] Input focus acquired")
+    self.ttt_loaded = false
+end
+
+function on_input(self, action_id, action)
+    if action_id == nil then
+        return false
+    end
+    
+    print("[launcher_controller] on_input: " .. tostring(action_id) .. " pressed=" .. tostring(action.pressed))
+    
+    if action_id == hash("key_1") and action.pressed then
+        if not self.ttt_loaded then
+            print("[launcher_controller] *** KEY 1 PRESSED - Loading TTT! ***")
+            local ids = collectionfactory.create("#factory_ttt")
+            print("[launcher_controller] Factory create returned: " .. tostring(ids))
+            self.ttt_loaded = true
+        else
+            print("[launcher_controller] TTT already loaded, ignoring key 1")
+        end
+        return true
+    elseif action_id == hash("key_2") and action.pressed then
+        print("[launcher_controller] *** KEY 2 PRESSED - Goose Hunt not ready ***")
+        return true
+    end
+    
+    return false
+end

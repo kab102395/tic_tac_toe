@@ -1,0 +1,127 @@
+nodes {
+  position {
+    x: 640.0
+    y: 620.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  size {
+    x: 400.0
+    y: 60.0
+  }
+  color {
+    x: 0.2
+    y: 0.2
+    z: 0.2
+    w: 1.0
+  }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+  id: "title_bg"
+}
+nodes {
+  position {
+    x: 640.0
+    y: 620.0
+    z: 0.1
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  size {
+    x: 100.0
+    y: 30.0
+  }
+  color {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+    w: 1.0
+  }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+  id: "title"
+}
+nodes {
+  position {
+    x: 300.0
+    y: 360.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  size {
+    x: 200.0
+    y: 80.0
+  }
+  color {
+    x: 0.2
+    y: 0.6
+    z: 1.0
+    w: 1.0
+  }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+  id: "btn_ttt"
+}
+nodes {
+  position {
+    x: 980.0
+    y: 360.0
+    z: 0.0
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  size {
+    x: 200.0
+    y: 80.0
+  }
+  color {
+    x: 1.0
+    y: 0.65
+    z: 0.0
+    w: 1.0
+  }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+  id: "btn_goose"
+}
+adjust_reference: ADJUST_REFERENCE_PARENT
+
+
