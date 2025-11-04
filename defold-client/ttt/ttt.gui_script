@@ -849,6 +849,9 @@ function on_input(self, action_id, action)
     if action_id == hash("key_esc") and action.released then
         print("[TTT] ESC pressed - returning to launcher")
         
+        -- Reset game state to ensure fresh lobby on next launch
+        self.game_state = "name_input"
+        
         -- Stop polling timer if running
         if self.polling_timer then
             timer.cancel(self.polling_timer)

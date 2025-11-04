@@ -66,6 +66,103 @@ nodes {
 }
 nodes {
   position {
+    x: 640.0
+    y: 540.0
+    z: 0.1
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  size {
+    x: 300.0
+    y: 40.0
+  }
+  color {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+    w: 1.0
+  }
+  type: TYPE_TEXT
+  blend_mode: BLEND_MODE_ALPHA
+  text: "Enter Player Name:"
+  font: "system_font"
+  id: "player_name_label"
+}
+nodes {
+  position {
+    x: 640.0
+    y: 500.0
+    z: 0.1
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  size {
+    x: 300.0
+    y: 50.0
+  }
+  color {
+    x: 0.9
+    y: 0.9
+    z: 0.9
+    w: 1.0
+  }
+  type: TYPE_BOX
+  blend_mode: BLEND_MODE_ALPHA
+  id: "player_name_input_bg"
+}
+nodes {
+  position {
+    x: 640.0
+    y: 500.0
+    z: 0.2
+  }
+  rotation {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  scale {
+    x: 1.0
+    y: 1.0
+    z: 1.0
+  }
+  size {
+    x: 280.0
+    y: 30.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    w: 1.0
+  }
+  type: TYPE_TEXT
+  blend_mode: BLEND_MODE_ALPHA
+  text: "Player"
+  font: "system_font"
+  id: "player_name_input"
+}
+nodes {
+  position {
     x: 300.0
     y: 360.0
     z: 0.0

@@ -7,11 +7,18 @@ function init(self)
     self.game_active = false
     self.ttt_collection = nil  -- Store collection ID for cleanup
     self.duckhunt_collection = nil  -- Store collection ID for cleanup
-    self.player_name = nil  -- Store current player name for stats
+    self.player_name = "Player"  -- Store current player name for stats (default to "Player")
 end
 
 function on_message(self, message_id, message, sender)
-    if message_id == hash("unload_ttt_game") then
+    if message_id == hash("set_player_name") then
+        -- Receive player name from launcher GUI
+        if message.playerName then
+            self.player_name = message.playerName
+            print("[launcher_controller] Player name updated: " .. self.player_name)
+        end
+        
+    elseif message_id == hash("unload_ttt_game") then
         print("[launcher_controller] Unloading TTT game...")
         if self.ttt_collection then
             collectionfactory.unload(self.ttt_collection)
@@ -22,7 +29,7 @@ function on_message(self, message_id, message, sender)
         -- Store player name if provided
         if message.playerName then
             self.player_name = message.playerName
-            print("[launcher_controller] Stored player name: " .. self.player_name)
+            print("[launcher_controller] Stored player name from TTT: " .. self.player_name)
             -- Fetch and display stats
             fetch_and_display_stats(self)
         end
@@ -104,6 +111,9 @@ function on_input(self, action_id, action)
             msg.post(".", "release_input_focus")
             self.duckhunt_collection = collectionfactory.create("#factory_duckhunt")
             print("[launcher_controller] Factory create returned: " .. tostring(self.duckhunt_collection))
+            -- Send player name to GooseHunt via broadcast message
+            msg.post(".", "set_player_name", { playerName = self.player_name })
+            print("[launcher_controller] Sent player name to GooseHunt: " .. self.player_name)
             self.duckhunt_loaded = true
             self.game_active = true
         else

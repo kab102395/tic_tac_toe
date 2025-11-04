@@ -3,10 +3,17 @@ function init(self)
 	gui.set_text(gui.get_node("missed_label"), "Missed: 0")
 	gui.set_enabled(gui.get_node("game_over_panel"), false)
 	self.player_name = "Guest"  -- Default player name
+	print("[GooseHunt HUD] Init - default player name: " .. self.player_name)
 end
 
 function on_message(self, message_id, message)
-	if message_id == hash("update_score") then
+	if message_id == hash("set_player_name") then
+		if message.playerName then
+			self.player_name = message.playerName
+			print("[GooseHunt HUD] Received player name from launcher: " .. self.player_name)
+		end
+		
+	elseif message_id == hash("update_score") then
 		local score = message.score or 0
 		gui.set_text(gui.get_node("score_label"), "Score: " .. score)
 

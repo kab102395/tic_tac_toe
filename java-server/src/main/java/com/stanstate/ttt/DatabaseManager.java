@@ -164,7 +164,7 @@ public class DatabaseManager {
             )
         """);
         
-        // Player statistics table for tracking wins/losses/draws
+        // Overall player statistics table for aggregate tracking
         conn.createStatement().execute("""
             CREATE TABLE IF NOT EXISTS player_stats (
                 player_name TEXT PRIMARY KEY,
@@ -175,6 +175,24 @@ public class DatabaseManager {
                 win_rate REAL DEFAULT 0.0,
                 last_game TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """);
+        
+        // Per-game-type statistics table for tracking separate stats
+        conn.createStatement().execute("""
+            CREATE TABLE IF NOT EXISTS game_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_name TEXT NOT NULL,
+                game_type TEXT NOT NULL,
+                games_played INTEGER DEFAULT 0,
+                wins INTEGER DEFAULT 0,
+                losses INTEGER DEFAULT 0,
+                draws INTEGER DEFAULT 0,
+                win_rate REAL DEFAULT 0.0,
+                last_played TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(player_name, game_type),
+                FOREIGN KEY (player_name) REFERENCES player_stats(player_name)
             )
         """);
         
@@ -276,6 +294,28 @@ public class DatabaseManager {
                 System.out.println("Player statistics table created successfully");
             } catch (SQLException e) {
                 System.err.println("Failed to create player_stats table: " + e.getMessage());
+            }
+            
+            try {
+                conn.createStatement().execute("""
+                    CREATE TABLE IF NOT EXISTS game_stats (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        player_name TEXT NOT NULL,
+                        game_type TEXT NOT NULL,
+                        total_games INTEGER DEFAULT 0,
+                        wins INTEGER DEFAULT 0,
+                        losses INTEGER DEFAULT 0,
+                        draws INTEGER DEFAULT 0,
+                        win_rate REAL DEFAULT 0.0,
+                        last_game TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(player_name, game_type),
+                        FOREIGN KEY (player_name) REFERENCES player_stats(player_name)
+                    )
+                """);
+                System.out.println("Game statistics table created successfully");
+            } catch (SQLException e) {
+                System.err.println("Failed to create game_stats table: " + e.getMessage());
             }
         }
         
