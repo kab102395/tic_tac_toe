@@ -1,0 +1,13 @@
+function init(self)
+    print("[duckhunt] Init - Loading GooseHunt proxy")
+    local proxy_url = msg.url(nil, "duckhunt", "game_proxy")
+    msg.post(proxy_url, "load")
+end
+
+function on_message(self, message_id, message, sender)
+    if message_id == hash("proxy_loaded") then
+        print("[duckhunt] GooseHunt proxy loaded - enabling")
+        msg.post(sender, "enable")
+        msg.post(sender, "acquire_input_focus")
+    end
+end

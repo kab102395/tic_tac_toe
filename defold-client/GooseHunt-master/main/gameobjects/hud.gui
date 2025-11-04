@@ -1,4 +1,4 @@
-script: "/main/scripts/hud_gui_script.gui_script"
+script: "/GooseHunt-master/main/scripts/hud_gui_script.gui_script"
 fonts {
   name: "default"
   font: "/builtins/fonts/default.font"

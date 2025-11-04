@@ -5,7 +5,7 @@ embedded_components {
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/main/atlases/environment.atlas\"\n"
+  "  texture: \"/GooseHunt-master/main/atlases/environment.atlas\"\n"
   "}\n"
   ""
   position {

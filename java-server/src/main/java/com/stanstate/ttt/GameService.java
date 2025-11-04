@@ -514,4 +514,100 @@ public class GameService {
             return response;
         }, gameThreadPool);
     }
+
+    public CompletableFuture<JsonObject> updatePlayerStats(String playerName, String result, String gameType) {
+        return CompletableFuture.supplyAsync(() -> {
+            System.out.println("=== GameService.updatePlayerStats START ===");
+            System.out.println("Player: " + playerName + ", Result: " + result + ", GameType: " + gameType);
+            
+            JsonObject response = new JsonObject();
+            
+            try (Connection conn = dbManager.getConnection()) {
+                // Check if player stats exist
+                String checkQuery = "SELECT * FROM player_stats WHERE player_name = ?";
+                PreparedStatement checkStmt = conn.prepareStatement(checkQuery);
+                checkStmt.setString(1, playerName);
+                ResultSet rs = checkStmt.executeQuery();
+                
+                if (rs.next()) {
+                    // Update existing stats
+                    int totalGames = rs.getInt("total_games") + 1;
+                    int wins = rs.getInt("wins");
+                    int losses = rs.getInt("losses");
+                    int draws = rs.getInt("draws");
+                    
+                    if ("win".equalsIgnoreCase(result)) {
+                        wins++;
+                    } else if ("loss".equalsIgnoreCase(result)) {
+                        losses++;
+                    } else if ("draw".equalsIgnoreCase(result)) {
+                        draws++;
+                    }
+                    
+                    double winRate = totalGames > 0 ? (double) wins / totalGames : 0.0;
+                    
+                    String updateQuery = "UPDATE player_stats SET total_games = ?, wins = ?, losses = ?, draws = ?, win_rate = ?, last_game = CURRENT_TIMESTAMP WHERE player_name = ?";
+                    PreparedStatement updateStmt = conn.prepareStatement(updateQuery);
+                    updateStmt.setInt(1, totalGames);
+                    updateStmt.setInt(2, wins);
+                    updateStmt.setInt(3, losses);
+                    updateStmt.setInt(4, draws);
+                    updateStmt.setDouble(5, winRate);
+                    updateStmt.setString(6, playerName);
+                    updateStmt.executeUpdate();
+                    
+                    System.out.println("Updated stats for player: " + playerName + " - Games: " + totalGames + ", Wins: " + wins + ", Losses: " + losses + ", Draws: " + draws);
+                } else {
+                    // Insert new player stats
+                    String insertQuery = "INSERT INTO player_stats (player_name, total_games, wins, losses, draws, win_rate) VALUES (?, 1, ?, ?, ?, ?)";
+                    PreparedStatement insertStmt = conn.prepareStatement(insertQuery);
+                    insertStmt.setString(1, playerName);
+                    
+                    if ("win".equalsIgnoreCase(result)) {
+                        insertStmt.setInt(2, 1);
+                        insertStmt.setInt(3, 0);
+                        insertStmt.setInt(4, 0);
+                        insertStmt.setDouble(5, 1.0);
+                    } else if ("loss".equalsIgnoreCase(result)) {
+                        insertStmt.setInt(2, 0);
+                        insertStmt.setInt(3, 1);
+                        insertStmt.setInt(4, 0);
+                        insertStmt.setDouble(5, 0.0);
+                    } else if ("draw".equalsIgnoreCase(result)) {
+                        insertStmt.setInt(2, 0);
+                        insertStmt.setInt(3, 0);
+                        insertStmt.setInt(4, 1);
+                        insertStmt.setDouble(5, 0.0);
+                    }
+                    
+                    insertStmt.executeUpdate();
+                    System.out.println("Created new stats for player: " + playerName + " with result: " + result);
+                }
+                
+                // Fetch and return updated stats
+                String statsQuery = "SELECT * FROM player_stats WHERE player_name = ?";
+                PreparedStatement statsStmt = conn.prepareStatement(statsQuery);
+                statsStmt.setString(1, playerName);
+                ResultSet statsRs = statsStmt.executeQuery();
+                
+                if (statsRs.next()) {
+                    response.addProperty("success", true);
+                    response.addProperty("playerName", statsRs.getString("player_name"));
+                    response.addProperty("totalGames", statsRs.getInt("total_games"));
+                    response.addProperty("wins", statsRs.getInt("wins"));
+                    response.addProperty("losses", statsRs.getInt("losses"));
+                    response.addProperty("draws", statsRs.getInt("draws"));
+                    response.addProperty("winRate", statsRs.getDouble("win_rate"));
+                    System.out.println("Stats updated successfully for: " + playerName);
+                }
+            } catch (Exception e) {
+                System.err.println("Error updating player stats: " + e.getMessage());
+                e.printStackTrace();
+                response.addProperty("success", false);
+                response.addProperty("error", e.getMessage());
+            }
+            
+            return response;
+        }, gameThreadPool);
+    }
 }

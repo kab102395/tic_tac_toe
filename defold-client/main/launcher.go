@@ -12,3 +12,9 @@ embedded_components {
   data: "prototype: \"/ttt/ttt_game.collection\"\n"
   ""
 }
+embedded_components {
+  id: "factory_duckhunt"
+  type: "collectionfactory"
+  data: "prototype: \"/duckhunt/duckhunt_game.collection\"\n"
+  ""
+}

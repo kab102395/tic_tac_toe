@@ -58,6 +58,15 @@ function init(self)
 end
 
 function on_input(self, action_id, action)
+	-- Allow ESC to return to launcher at any time
+	if action_id == hash("key_esc") and action.released then
+		print("[GooseHunt] ESC pressed - returning to launcher")
+		
+		-- Send message to duckhunt proxy to unload and signal launcher
+		msg.post("@boot:/main#launcher_controller", "unload_duckhunt_game")
+		return true
+	end
+	
 	if self.game_over or not self.guy_ready then
 		print("Input blocked — game over or guy not ready")
 		return

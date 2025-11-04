@@ -1,6 +1,6 @@
 components {
-  id: "loader"
-  component: "/GooseHunt-master/main/scripts/loader.script"
+  id: "script"
+  component: "/duckhunt/duckhunt.script"
 }
 embedded_components {
   id: "game_proxy"

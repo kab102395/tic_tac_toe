@@ -2,6 +2,7 @@ function init(self)
 	gui.set_text(gui.get_node("score_label"), "Score: 0")
 	gui.set_text(gui.get_node("missed_label"), "Missed: 0")
 	gui.set_enabled(gui.get_node("game_over_panel"), false)
+	self.player_name = "Guest"  -- Default player name
 end
 
 function on_message(self, message_id, message)
@@ -16,6 +17,12 @@ function on_message(self, message_id, message)
 		gui.set_text(gui.get_node("missed_geese"), "Missed: " .. message.missed)
 		gui.set_text(gui.get_node("total_geese"), "Total: " .. message.total)
 		gui.set_text(gui.get_node("accuracy"), "Accuracy: " .. message.accuracy .. "%")
+		
+		-- Store the final score for stats posting
+		self.final_score = message.score
+		
+		-- Log game result (GooseHunt score tracking will be added later)
+		print("[GooseHunt] Game Over - Player: " .. self.player_name .. ", Score: " .. message.score .. ", Missed: " .. message.missed)
 
 	elseif message_id == hash("reset") then
 		gui.set_enabled(gui.get_node("game_over_panel"), false)

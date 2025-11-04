@@ -2,9 +2,17 @@ mouse_trigger {
   input: MOUSE_BUTTON_1
   action: "touch"
 }
+mouse_trigger {
+  input: MOUSE_BUTTON_1
+  action: "shoot"
+}
 touch_trigger {
   input: TOUCH_MULTI
   action: "touch"
+}
+touch_trigger {
+  input: TOUCH_MULTI
+  action: "shoot"
 }
 key_trigger {
   input: KEY_C

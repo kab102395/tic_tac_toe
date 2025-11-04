@@ -1,7 +1,7 @@
 name: "game"
 instances {
   id: "guy"
-  prototype: "/main/gameobjects/guy.go"
+  prototype: "/GooseHunt-master/main/gameobjects/guy.go"
   position {
     x: 309.0
     y: 165.0
@@ -14,7 +14,7 @@ instances {
 }
 instances {
   id: "background"
-  prototype: "/main/gameobjects/background.go"
+  prototype: "/GooseHunt-master/main/gameobjects/background.go"
   position {
     x: 480.0
     y: 320.0
@@ -23,7 +23,7 @@ instances {
 }
 instances {
   id: "bush"
-  prototype: "/main/gameobjects/bush.go"
+  prototype: "/GooseHunt-master/main/gameobjects/bush.go"
   position {
     x: 480.0
     y: 320.0
@@ -31,10 +31,10 @@ instances {
 }
 instances {
   id: "hud"
-  prototype: "/main/gameobjects/hud.go"
+  prototype: "/GooseHunt-master/main/gameobjects/hud.go"
 }
 instances {
   id: "main_controller"
-  prototype: "/main/gameobjects/main_controller.go"
+  prototype: "/GooseHunt-master/main/gameobjects/main_controller.go"
 }
 scale_along_z: 0

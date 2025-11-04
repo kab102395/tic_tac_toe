@@ -270,6 +270,37 @@ public class RestApiServer {
             }
         });
 
+        // NEW: Update player statistics endpoint
+        Spark.post("/api/stats/update", (request, response) -> {
+            response.type("application/json");
+            
+            try {
+                String body = request.body();
+                System.out.println("=== UPDATE PLAYER STATS REQUEST ===");
+                System.out.println("Request body: " + body);
+                
+                JsonObject requestData = gson.fromJson(body, JsonObject.class);
+                String playerName = requestData.get("playerName").getAsString();
+                String result = requestData.get("result").getAsString(); // "win", "loss", or "draw"
+                String gameType = requestData.has("gameType") ? requestData.get("gameType").getAsString() : "tictactoe";
+                
+                System.out.println("Player: " + playerName + ", Result: " + result + ", GameType: " + gameType);
+                
+                JsonObject stats = gameService.updatePlayerStats(playerName, result, gameType).get();
+                System.out.println("Update response: " + stats);
+                
+                return gson.toJson(stats);
+            } catch (Exception e) {
+                System.out.println("UPDATE STATS ERROR: " + e.getMessage());
+                e.printStackTrace();
+                JsonObject errorResponse = new JsonObject();
+                errorResponse.addProperty("success", false);
+                errorResponse.addProperty("error", e.getMessage());
+                response.status(500);
+                return gson.toJson(errorResponse);
+            }
+        });
+
         // Health check
         Spark.get("/api/health", (req, res) -> {
             res.type("application/json");

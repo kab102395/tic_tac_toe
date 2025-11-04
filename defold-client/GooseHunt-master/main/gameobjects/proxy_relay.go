@@ -1,4 +1,4 @@
 components {
   id: "script"
-  component: "/main/scripts/relay.script"
+  component: "/GooseHunt-master/main/scripts/relay.script"
 }

@@ -1,7 +1,7 @@
 images {
-  image: "/images/Background.png"
+  image: "/GooseHunt-master/images/Background.png"
 }
 images {
-  image: "/images/Bush.png"
+  image: "/GooseHunt-master/images/Bush.png"
 }
 extrude_borders: 2

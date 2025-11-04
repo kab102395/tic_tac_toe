@@ -662,14 +662,19 @@ function update(self, dt)
             self.result = msg.result or "unknown"
             local status = "🏁 " .. self.player_name .. " vs " .. self.opponent_name .. "\n"
             
+            -- Track game result to database
+            local game_result_str = "draw"
             if msg.winner then
                 if msg.winner == self.my_mark then
                     status = status .. "🎉 " .. self.player_name .. " WINS!"
+                    game_result_str = "win"
                 else
                     status = status .. "😔 " .. self.opponent_name .. " wins!"
+                    game_result_str = "loss"
                 end
             elseif msg.result == "draw" then
                 status = status .. "🤝 It's a draw!"
+                game_result_str = "draw"
             else
                 status = status .. tostring(msg.result)
             end
@@ -686,6 +691,24 @@ function update(self, dt)
                 self.board = msg.board
                 update_board_visual(self)
             end
+            
+            -- Post game result to server for stats tracking
+            print("[TTT] Posting game result to stats endpoint - Player: " .. self.player_name .. ", Result: " .. game_result_str)
+            local stats_payload = {
+                playerName = self.player_name,
+                result = game_result_str,
+                gameType = "tictactoe"
+            }
+            http.request("http://localhost:8080/api/stats/update", "POST", function(self, id, response)
+                print("[TTT] Stats update response status: " .. response.status)
+                if response.status == 200 then
+                    print("[TTT] Stats updated successfully")
+                else
+                    print("[TTT] Stats update failed with status: " .. response.status)
+                end
+            end, {
+                headers = { "Content-Type: application/json" }
+            }, json.encode(stats_payload))
             
         elseif msg.t == "match" then
             -- Legacy match format support
@@ -822,10 +845,18 @@ function on_input(self, action_id, action)
         end
     end
     
-    -- Allow returning to lobby with ESC key
+    -- Allow returning to launcher with ESC key
     if action_id == hash("key_esc") and action.released then
-        self.game_state = "lobby"
-        show_lobby(self)
+        print("[TTT] ESC pressed - returning to launcher")
+        
+        -- Stop polling timer if running
+        if self.polling_timer then
+            timer.cancel(self.polling_timer)
+            self.polling_timer = nil
+        end
+        
+        -- Post message to launcher to unload TTT game and include player name for stats
+        msg.post("@boot:/main#launcher_controller", "unload_ttt_game", { playerName = self.player_name })
     end
 end
 

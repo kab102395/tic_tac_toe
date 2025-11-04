@@ -1,0 +1,6 @@
+name: "duckhunt_game"
+scale_along_z: 0
+instances {
+  id: "duckhunt"
+  prototype: "/duckhunt/duckhunt.go"
+}

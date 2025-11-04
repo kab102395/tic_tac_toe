@@ -1,6 +1,6 @@
 components {
   id: "script"
-  component: "/main/scripts/guy.script"
+  component: "/GooseHunt-master/main/scripts/guy.script"
 }
 embedded_components {
   id: "sprite"
@@ -9,7 +9,7 @@ embedded_components {
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/main/atlases/sprites.atlas\"\n"
+  "  texture: \"/GooseHunt-master/main/atlases/sprites.atlas\"\n"
   "}\n"
   ""
   position {
@@ -19,6 +19,6 @@ embedded_components {
 embedded_components {
   id: "projectile_factory"
   type: "factory"
-  data: "prototype: \"/main/gameobjects/projectile.go\"\n"
+  data: "prototype: \"/GooseHunt-master/main/gameobjects/projectile.go\"\n"
   ""
 }

@@ -1,4 +1,4 @@
 components {
   id: "gui"
-  component: "/main/gameobjects/hud.gui"
+  component: "/GooseHunt-master/main/gameobjects/hud.gui"
 }

@@ -1,6 +1,6 @@
 components {
   id: "explosion"
-  component: "/main/scripts/explosion.script"
+  component: "/GooseHunt-master/main/scripts/explosion.script"
 }
 embedded_components {
   id: "sprite"
@@ -9,7 +9,7 @@ embedded_components {
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/main/atlases/sprites.atlas\"\n"
+  "  texture: \"/GooseHunt-master/main/atlases/sprites.atlas\"\n"
   "}\n"
   ""
   scale {

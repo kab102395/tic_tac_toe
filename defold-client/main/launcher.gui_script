@@ -1,5 +1,13 @@
 function init(self)
     print("[launcher_gui] Init - Launcher screen ready")
+    gui.set_text(gui.get_node("stats_display"), "")  -- Clear stats initially
 end
 
-
+function on_message(self, message_id, message, sender)
+    if message_id == hash("set_stats_text") then
+        if message.text then
+            gui.set_text(gui.get_node("stats_display"), message.text)
+            print("[launcher_gui] Stats text updated: " .. message.text)
+        end
+    end
+end

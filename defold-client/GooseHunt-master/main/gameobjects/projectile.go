@@ -1,6 +1,6 @@
 components {
   id: "projectile"
-  component: "/main/scripts/projectile.script"
+  component: "/GooseHunt-master/main/scripts/projectile.script"
 }
 embedded_components {
   id: "sprite"
@@ -9,7 +9,7 @@ embedded_components {
   "material: \"/builtins/materials/sprite.material\"\n"
   "textures {\n"
   "  sampler: \"texture_sampler\"\n"
-  "  texture: \"/main/atlases/sprites.atlas\"\n"
+  "  texture: \"/GooseHunt-master/main/atlases/sprites.atlas\"\n"
   "}\n"
   ""
   position {
