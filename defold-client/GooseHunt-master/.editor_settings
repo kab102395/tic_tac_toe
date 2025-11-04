@@ -1,0 +1,157 @@
+{
+  :bundle {
+    :last-bundle-command :project.bundle-windows
+    :output-directory "C:\\Users\\schmo\\OneDrive\\Desktop\\CS\\Game"
+    :windows {
+      :build_report false
+      :contentless false
+      :liveupdate false
+      :platform "x86_64-win32"
+      :texture_compression "enabled"
+      :variant "debug"
+      :with_symbols true
+    }
+  }
+  :code {
+    :find {
+      :term ""
+    }
+  }
+  :search-in-files {
+    :exts ""
+    :include-libraries true
+    :term "goose"
+  }
+  :workflow {
+    :recent-files [
+      [
+        "/main/atlases/environment.atlas"
+        :scene
+      ]
+      [
+        "/main/scripts/background.script"
+        :code
+      ]
+      [
+        "/builtins/fonts/default.font"
+        :text
+      ]
+      [
+        "/builtins/fonts/default.font"
+        :scene
+      ]
+      [
+        "/hud.gui"
+        :scene
+      ]
+      [
+        "/main/hud.gui_script"
+        :code
+      ]
+      [
+        "/main/scripts/hud_gui_script.script"
+        :code
+      ]
+      [
+        "/main/gameobjects/spawner.go"
+        :scene
+      ]
+      [
+        "/main/gameobjects/hud.go"
+        :scene
+      ]
+      [
+        "/builtins/input/all.input_binding"
+        :cljfx-form-view
+      ]
+      [
+        "/builtins/input/default.gamepads"
+        :cljfx-form-view
+      ]
+      [
+        "/game.project"
+        :cljfx-form-view
+      ]
+      [
+        "/main/collections/main.collection"
+        :scene
+      ]
+      [
+        "/main/gameobjects/loader.go"
+        :scene
+      ]
+      [
+        "/main/scripts/loader.script"
+        :code
+      ]
+      [
+        "/input/game.input_binding"
+        :cljfx-form-view
+      ]
+      [
+        "/main/gameobjects/proxy_relay.go"
+        :scene
+      ]
+      [
+        "/main/scripts/relay.script"
+        :code
+      ]
+      [
+        "/main/gameobjects/hud.gui"
+        :scene
+      ]
+      [
+        "/main/gameobjects/guy.go"
+        :scene
+      ]
+      [
+        "/main/scripts/goose.script"
+        :code
+      ]
+      [
+        "/main/scripts/hud_gui_script.gui_script"
+        :code
+      ]
+      [
+        "/main/scripts/projectile.script"
+        :code
+      ]
+      [
+        "/main/gameobjects/projectile.go"
+        :scene
+      ]
+      [
+        "/main/scripts/guy.script"
+        :code
+      ]
+      [
+        "/main/collections/game.collection"
+        :scene
+      ]
+      [
+        "/main/gameobjects/main_controller.go"
+        :scene
+      ]
+      [
+        "/main/gameobjects/explosion.go"
+        :scene
+      ]
+      [
+        "/main/atlases/sprites.atlas"
+        :scene
+      ]
+      [
+        "/main/scripts/explosion.script"
+        :code
+      ]
+      [
+        "/main/scripts/main.script"
+        :code
+      ]
+      [
+        "/.gitignore"
+        :code
+      ]
+    ]
+  }
+}
